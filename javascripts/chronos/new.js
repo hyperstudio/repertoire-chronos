@@ -21,7 +21,7 @@ $(window).load(
 	var dataStartYear = 1900;
 	var dataEndYear   = 2000;
 
-	var url           = "http://slebinos.mit.edu/dev/js-play/";  // NEVER SET BY SCALER (JUST NEED GETTER)
+	var url           = "http://slebinos.mit.edu/dev/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
 	var imgUrl        = url + "javascripts/chronos/";            // NEVER SET BY SCALER (JUST NEED GETTER)
 
 
@@ -54,5 +54,11 @@ $(window).load(
 
 	// Make sure floats get reset, without sloppy markup
 	// $('#timelineContainer').append('<div style="position:absolute; z-index:2; bottom:2px; right:5px;"><img src="' + imgUrl + 'img/hs-logo.png" alt="Built by HyperStudio" /></div><div class="clear"></div>');
+
+
+	$("#timelineMonths").click(function(){
+				       alert($(this).height());
+				   });
+
     }
 );

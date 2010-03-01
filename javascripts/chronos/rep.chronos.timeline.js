@@ -56,9 +56,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	sizeRatio:        null,                            // What is the size ratio (needed for calculating corresponding movement)  -NEEDS INITIALIZATION
 	correlateYears:   0,
 	correlateDecades: 0,
-	mouseY:           '',
-	mouseX:           '',
-	wasMouseY:        '',
+	mouseY:           0,
+	mouseX:           0,
+	wasMouseY:        0,
+	wasMouseY2:       0,
 
 	// SCALER
 	bigTileTop:       null,                            // a variable used for scaler manipulation, more or less same as above  -NEEDS INITIALIZATION
@@ -168,7 +169,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							  intervalName:        'year',
 							  subIntervalName:     'month',
 							  isManager:           false,
-						          tilesVisible:        .5
+						          tilesVisible:        1
 						      }, dataModel);
 
 /*
@@ -190,7 +191,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							  intervalName:        'month',
 							  subIntervalName:     'day',
 							  isManager:           false,
-						          tilesVisible:        1
+						          tilesVisible:        .5
 						      }, dataModel);
 
 	/*
@@ -284,6 +285,7 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 	$(mainSelector).mousedown(
 	    function() {
 		defaults.wasMouseY = defaults.mouseY;
+		defaults.wasMouseY2 = defaults.mouseY;
 	    });
 
 	/*
@@ -350,11 +352,10 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		 * 
 		 */
 
-
-
 		var secondsMoved = thisEventWidget.getSecondsToPixels() * thisEventWidget.getDragChange();
 		var pixelsToMove = 0;
 
+		$("#dataMonitor #secondsToPixels span.data").html(thisEventWidget.getSecondsToPixels());
 		$("#dataMonitor #dragChange span.data").html(thisEventWidget.getDragChange());
 		$("#dataMonitor #secondsMoved span.data").html(secondsMoved);
 
@@ -368,18 +369,23 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		    $("#dataMonitor #pixelsToMove span.data").html(name + ": " + pixelsToMove);
 
 		    widgets[name].setTop(pixelsToMove);
-		    widgets[name].setDragChange(pixelsToMove);
+		    // widgets[name].setDragChange(pixelsToMove);
 
 		    // trying to figure out less costly algorithm for generating tiles...this ain't it...yet...
-		    if (pixelsToMove > 50) {
+//		    if (pixelsToMove > 50) {
 			//widgets[name].checkTiles();
-		    }
+//		    }
+
 		}
 
 		defaults.wasMouseY = defaults.mouseY;  // Memory for mouse position
 	    };
 
 	    widgetStopFunctions[name] = function (event, ui) {
+
+		// thisEventWidget.setDragChange(defaults.wasMouseY2 - defaults.mouseY);
+
+
 		var thisEventWidget = self.getWidgetWithSelector(ui.helper.attr('id'));
 		// alert(thisEventWidget.getSecondsToPixels());
 

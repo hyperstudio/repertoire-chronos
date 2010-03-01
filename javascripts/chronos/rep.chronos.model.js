@@ -221,8 +221,14 @@ repertoire.chronos.model = function(options) {
 	var totalYearSeconds = 0;
 
 	// DOESN'T ACCOUNT FOR START MONTH 'CAUSE I REALIZED I WOULD HAVE TO INCREMENT THE YEAR IF I HIT 11 for (startMonth + i) and...etc.
-	for (var i = 0; i <= monthCount; i++) {
-	    totalYearSeconds += (dateTimeConstants.day * Date.getDaysInMonth(startYear, startMonth));
+	//for (var i = 0; i <= monthCount; i++) {
+	for (var i = 0; i <= 11; i++) {
+	    totalYearSeconds += (dateTimeConstants.day * Date.getDaysInMonth(startYear, i));
+/*
+	    if (arguments[1] == 'test!') {
+		alert(startYear + ', ' + i + ', ' + Date.getDaysInMonth(startYear, i));
+	    }
+*/
 	}
 
 	return totalYearSeconds;
@@ -324,6 +330,25 @@ repertoire.chronos.model = function(options) {
 	    intervalName == 'day'    ||
 	    intervalName == 'week') {
 	    return dateTimeConstants[intervalName];
+	} else if (intervalName == 'month') {
+	    var secondsTotal = 0;
+
+	    for (var k = 0; k < 4; k++) {
+		secondsTotal += getSecondsInYear(date.getFullYear() + k);
+
+/*
+  		if (arguments[2]) {
+		    alert((date.getFullYear() + k) + ', ' + getSecondsInYear(date.getFullYear() + k, 'test!'));
+		}
+*/
+	    }
+
+	    //alert("One! " + getSecondsInYear(date.getFullYear()) / 12);
+	    //alert("Two! " + secondsTotal / 48);
+
+	    return (getSecondsInYear(date.getFullYear()) / 12);
+
+	    // return (secondsTotal / 48);
         // Otherwise, we need to pass our startDate in as well to get the particular seconds value for this date: 
 	} else {
 	    // alert('our date index (if month, should numeric, like 0 for January for example)' + self.getDateIndex(date, intervalName));
@@ -409,12 +434,19 @@ repertoire.chronos.model = function(options) {
 
 	// These two lines are just a bit of wrangling to create the object literal options dynamically...
 	var add_vals = {};
-	add_vals[subIntervalName + 's'] = 1;
+	add_vals[subIntervalName + 's'] = 0;
 
+	if (arguments[2] != null && arguments[2] > 0) {
+	    add_vals[subIntervalName + 's'] = new Number(add_vals[subIntervalName + 's'] + arguments[2]);
+	    strippedStartDate = strippedStartDate.add(add_vals);
+	}
+
+	add_vals[subIntervalName + 's'] = new Number(add_vals[subIntervalName + 's'] + 1);
 	var plusOneDate = strippedStartDate.clone().add(add_vals);
 
 	for (var i = 0, j = self.data.length; i < j; i++) {
 	    if (self.data[i].start.between(strippedStartDate, plusOneDate)) {
+		// alert(strippedStartDate + ' = ' + strippedStartDate + ', plusOneDate = ' + plusOneDate);
 		eventsSelection.push(self.data[i]);
 	    }
 	}

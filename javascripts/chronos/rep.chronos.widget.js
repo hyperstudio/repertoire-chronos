@@ -78,6 +78,14 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     // For saving change when this widget or others are dragged:
     var pixelDragChange      = 0;
 
+    // Decimal remainder saved between updates to top value:
+    var topSetValueRemainder = 0;
+
+    // This starts at zero.
+    var originalTop          = 0;
+    var masterTop            = 0;
+
+
 
     // PUBLIC
 
@@ -94,9 +102,22 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     self.setTop = function (topChange) {
 	var checkTop = parseFloat($(widgetSelector).css('top'));
 
-	// alert(checkTop + topChange);
+	var adjustedTopChange = topChange + topSetValueRemainder;
+	var adjustedTopChangeNoDecimal = parseInt(adjustedTopChange);
+	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
 
-	$(widgetSelector).css('top', (checkTop - topChange) + 'px');  // CSS CHANGE HERE
+	//var topSetValue = (checkTop - topChange);
+	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
+
+
+	//$("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
+
+
+	$(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
+    };
+
+    self.getMyTopSetValueRemainderVal = function () {
+	//$("#dataMonitor #" + widgetSelector +  topSetValueRemainder
     };
 
 
@@ -137,7 +158,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	// WHAT DO WE DO WITH REMAINDER?
-	secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName) / (timelineSize / tilesVisible);
+	if (widgetSelector == '#timelineMonths') {
+	    secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName, widgetSelector) / (timelineSize / tilesVisible);
+	} else {
+	    secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName) / (timelineSize / tilesVisible);
+	}
 
 	// Create initial widget HTML element and add id/classes:
 	var mainWidgetElement = $('<div />').appendTo($(selector));
@@ -175,7 +200,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	self.checkTiles();
 
-	self.loadEvents();
+	if (intervalName != 'decade') {
+	    self.loadEvents();
+	}
     };
 
 
@@ -262,6 +289,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// (Okay, should this be smarter, as in automatically assume we want the next smallest interval down?
 	// Maybe not, we may want to divide years into quarters, not months...etc.?)
+
 	var newSubIntervalSize = dataModel.getSecondsInInterval(currentDate, subIntervalName) / secondsToPixels;
 
 	var subIntervalCount   = dataModel.getIntervalCount(currentDate, subIntervalName);
@@ -368,6 +396,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Splitting it up like this right now follows the old tiling method...
 	// $(selector).css('top', (-1 * (thisSubIntervalContainerElement.css('height')) + 'px'));  // CSS CHANGE HERE
 
+	// alert(dataModel.getSubDate(currentDate, intervalName) + ': ' + thisSubIntervalContainerElement.css('height'));
+
 	// Return height of the tile generated.  Should return something else?
 	return (parseInt(thisSubIntervalContainerElement.css('height')));
     };
@@ -467,7 +497,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	}
 
 	var testInc = 0;
-	var testIncTest = 5;
+	var testIncTest = 15;
 
 	while (upTest() && testInc < testIncTest) {
 	    checkTop += self.tile('up');
@@ -523,17 +553,48 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	// Iterate through each rendered tile and generate events?
-	alert($(widgetSelector).find("." + intervalName + "Model").attr('class'));
 
-	// from here, find the date that was inserted in...etc.
+	var regexp         = new RegExp(intervalName + "_([0-9]{4})_([0-9]{2})_([0-9]{2})-([0-9]{2})_([0-9]{2})_([0-9]{2})_inc([0-9]{1})");
 
-	// self.getDateObject // Date.parse alias
+	$(widgetSelector).find("." + intervalName + "Model").children().children().each(
+	    function(index, element) {
+		var date_class     = $(element).attr('class').match(regexp);
+		var eventStartDate = dataModel.getDateObject(date_class[1] + '-' + date_class[2] + '-' + date_class[3] + ' ' + date_class[4] + ':' + date_class[5] + ':' + date_class[6]);
 
-	var events = dataModel.getEventsInInterval(startDate, subIntervalName);
+		var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName, date_class[7]);
 
-	for (var i = 0, j = events.length; i < j; i++) {
-	}
+		// alert(events.length);
 
+		for (var i = 0, j = events.length; i < j; i++) {
+		    // for (var i = 0, j = events.length; i < j; i++) {
+		    //alert(events[i]);
+
+		    // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
+		    var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
+		    //var topPosition  = 0;  // Should be (subInterval / amount of subIntervals in interval) * height of this subInterval
+		    //var leftPosition = 0;
+		    // leftPosition = wasPosCount * defaults.iconWidth; // how far to indent?  GLOBAL
+
+		    $(element).append(
+			"<img src='" + "javascripts/chronos/" + "img/t-50-s-" + dotSize + ".png'"
+			    + " class='eDot " + dotSize + "'"
+			    + " id='chart-" + events[i].id + "'"
+			    + " alt='" + $(element).attr('class') + "'/>"
+		    );
+
+/*
+		   $(element).append(
+		       "<img src='" + "javascripts/chronos/" + "img/t-50-s-" + dotSize + ".png'"
+			   + " class='eDot " + dotSize + "'"
+			   + " id='chart-" + events[i].id + "'"
+			   + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
+			   + " margin-top:-10px; top:" + topPosition + "px;' title=''"
+			   + " alt='" + $(element).attr('class') + "'/>"
+		   );
+*/
+		}
+	    }
+	);
     };
 
 
