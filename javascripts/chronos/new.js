@@ -37,28 +37,13 @@ $(window).load(
 
 	thisModel.initialize();  // Must be run to load data
 
+
 	// BUILD TIMELINE:
-	var mainSelector = "#timelineContainer";
 
- 	var timeline = repertoire.chronos.timeline(mainSelector, null, thisModel);
+ 	var timeline = repertoire.chronos.timeline('#timelineContainer', null, thisModel);
 	timeline.initialize();   // Must be called first: builds Timeline
-
-/*
-	alert(thisModel.getDateTimeConstant('year'));
-	alert(thisModel.getDateTimeConstant('decade'));
-
- 	var timelineScaler = repertoire.chronos.timelineScaler('#scaler', null, timeline);
-	timelineScaler.initialize();
-	timelineScaler.initiateScalerEvents();
-*/
 
 	// Make sure floats get reset, without sloppy markup
 	// $('#timelineContainer').append('<div style="position:absolute; z-index:2; bottom:2px; right:5px;"><img src="' + imgUrl + 'img/hs-logo.png" alt="Built by HyperStudio" /></div><div class="clear"></div>');
-
-
-	$("#timelineMonths").click(function(){
-				       alert($(this).height());
-				   });
-
     }
 );

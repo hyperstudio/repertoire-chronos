@@ -48,6 +48,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var widgetSelector       = options.widgetSelector      || null;      // Must be set
 
     var tilesVisible         = options.tilesVisible        || 2;
+    var ordering             = options.ordering            || null;      // Must be set
 
     var intervalName         = options.intervalName        || 'decade';  // Name of unit a single tile represents.
     var subIntervalName      = options.subIntervalName     || 'year';    // Name of sub-unit. For example, if the column tiles are years, the sub-unit is a month.
@@ -205,6 +206,10 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	}
     };
 
+
+    self.getOrdering = function () {
+	return ordering;
+    };
 
     self.getSelector = function () {
 	return widgetSelector;
@@ -497,7 +502,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	}
 
 	var testInc = 0;
-	var testIncTest = 15;
+	var testIncTest = 2;
 
 	while (upTest() && testInc < testIncTest) {
 	    checkTop += self.tile('up');

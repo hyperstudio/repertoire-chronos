@@ -107,6 +107,17 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	}
     };
 
+
+    /* ADDED WHEN RE-BUILDING SCALER -DD, 03/02/10 */
+
+    self.getSelector = function () {
+	return mainSelector;
+    };
+
+    /* END ADDED WHEN RE-BUILDING SCALER */
+
+
+
     self.update = function() {
 /*
 	// Place events for new years
@@ -130,7 +141,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	defaults.timelineSize    = parseInt($(mainSelector).css(defaults.timelineDir));  // Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
 	//alert('JQUERY .css FUNCTION GIVES US:' + $(mainSelector).css(defaults.timelineDir));
 
-	defaults.sizeRatio       = defaults.bigUnitSize/defaults.smallUnitSize;
+	// defaults.sizeRatio       = defaults.bigUnitSize/defaults.smallUnitSize;
 	// defaults.yearWidth       = parseInt($("#timelineYears").css(defaults.perp));
 
 	// Just for SCALER
@@ -162,16 +173,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						          tilesVisible:        1
 						      }, dataModel);
 
-	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
-							  startDate:           defaults.startDate,
-							  volumePercentage:    '50',
-							  widgetSelector:      '#timelineYears',
-							  intervalName:        'year',
-							  subIntervalName:     'month',
-							  isManager:           false,
-						          tilesVisible:        1
-						      }, dataModel);
-
 /*
 	widgets.years2Widget = repertoire.chronos.widget(mainSelector, {
 							  startDate:           defaults.startDate,
@@ -184,6 +185,16 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						      }, dataModel);
 */
 
+	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
+							  startDate:           defaults.startDate,
+							  volumePercentage:    '50',
+							  widgetSelector:      '#timelineYears',
+							  intervalName:        'year',
+							  subIntervalName:     'month',
+							  isManager:           false,
+						          tilesVisible:        1
+						      }, dataModel);
+
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
 							  startDate:           defaults.startDate,
 							  volumePercentage:    '30',
@@ -193,6 +204,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							  isManager:           false,
 						          tilesVisible:        .5
 						      }, dataModel);
+
 
 	/*
 	 * First we have to figure out the 'manager' secondsToPixels value.
@@ -272,8 +284,9 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 
 	self.initiateTileEvents();
 
-	// Finally, place events:
-//	self.update();
+ 	var scaler = repertoire.chronos.scaler('#scaler',{ scalerViewWidget: 'yearsWidget' }, self, widgets);
+	scaler.initialize();
+	scaler.initiateScalerEvents();
     };
 
 
@@ -369,9 +382,8 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		    $("#dataMonitor #pixelsToMove span.data").html(name + ": " + pixelsToMove);
 
 		    widgets[name].setTop(pixelsToMove);
-		    // widgets[name].setDragChange(pixelsToMove);
 
-		    // trying to figure out less costly algorithm for generating tiles...this ain't it...yet...
+		    // trying to figure out less costly algorithm for generating tiles...this ain't it...
 //		    if (pixelsToMove > 50) {
 			//widgets[name].checkTiles();
 //		    }
@@ -383,11 +395,7 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 
 	    widgetStopFunctions[name] = function (event, ui) {
 
-		// thisEventWidget.setDragChange(defaults.wasMouseY2 - defaults.mouseY);
-
-
 		var thisEventWidget = self.getWidgetWithSelector(ui.helper.attr('id'));
-		// alert(thisEventWidget.getSecondsToPixels());
 
 		for (name in widgets) {
 		    widgets[name].checkTiles();
@@ -601,7 +609,6 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 	}
 	return false;
     };
-
 
     // end of model factory function
     return self;
