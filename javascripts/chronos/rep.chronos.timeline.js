@@ -18,23 +18,14 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     // PRIVATE
 
-    // TEMPORARY WHILE I FIGURE OUT HOW TO ABSTRACT THESE OUT
-    var widgets = {};
+    var widgets       = {};  // Widgets inside timeline.
+    var managerWidget = null;  // Store this so we don't have to keep looping through widgets collection
 
 
     /* CARRIED OVER VARS */
 
     var defaults = {
 	startDate:        'Jan 01, 1984 00:00:00',
-
-//	startYear:        1984,                            // We can accept date differently sometime down the line, and include months then.
-//	remainderYear:    null,                            // Get year offset for decades  -NEEDS INITIALIZATION
-//	remainderMonth:   2,
-
-//	thisYear:         '',
-//	thisDecade:       '',
-//	downYear:         '',
-//	downDecade:       '',
 
 	timelineDir:      'height',                        // What direction should this timeline be (options: height or width):
 	timelineSize:     null,                            // -NEEDS INITIALIZATION
@@ -114,6 +105,23 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	return mainSelector;
     };
 
+    self.getManager = function () {
+	// If we've already looped through and found this, just return this value.
+	if (managerWidget != null) {
+	    return managerWidget;
+	}
+
+	// ...otherwise we need to find the manager widget.
+	for (name in widgets) {
+	    if (widgets[name].isManager()) {
+		managerWidget = widgets[name];
+		return widgets[name];
+	    }
+	};
+
+	return false;
+    };
+
     /* END ADDED WHEN RE-BUILDING SCALER */
 
 
@@ -141,9 +149,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	defaults.timelineSize    = parseInt($(mainSelector).css(defaults.timelineDir));  // Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
 	//alert('JQUERY .css FUNCTION GIVES US:' + $(mainSelector).css(defaults.timelineDir));
 
-	// defaults.sizeRatio       = defaults.bigUnitSize/defaults.smallUnitSize;
-	// defaults.yearWidth       = parseInt($("#timelineYears").css(defaults.perp));
-
 	// Just for SCALER
 	defaults.bigTileTop      = defaults.bigTileOffset;
 
@@ -164,46 +169,37 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	self.mousePrePos();
 
 	widgets.decadesWidget = repertoire.chronos.widget(mainSelector, {
-							  startDate:           defaults.startDate,
-							  volumePercentage:    '20',
-							  widgetSelector:      '#timelineDecades',
-							  intervalName:        'decade',
-							  subIntervalName:     'year',
-							  isManager:           true,
-						          tilesVisible:        1
-						      }, dataModel);
-
-/*
-	widgets.years2Widget = repertoire.chronos.widget(mainSelector, {
-							  startDate:           defaults.startDate,
-							  volumePercentage:    '10',
-							  widgetSelector:      '#timelineYears2',
-							  intervalName:        'year',
-							  subIntervalName:     'month',
-							  isManager:           false,
-						          tilesVisible:        2
-						      }, dataModel);
-*/
+							      startDate:           defaults.startDate,
+							      volumePercentage:    '20',
+							      widgetSelector:      '#timelineDecades',
+							      intervalName:        'decade',
+							      subIntervalName:     'year',
+							      isManager:           true,
+						              tilesVisible:        .25,
+							      eventViewType:       'density'
+							  }, dataModel);
 
 	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
-							  startDate:           defaults.startDate,
-							  volumePercentage:    '50',
-							  widgetSelector:      '#timelineYears',
-							  intervalName:        'year',
-							  subIntervalName:     'month',
-							  isManager:           false,
-						          tilesVisible:        1
-						      }, dataModel);
+							    startDate:           defaults.startDate,
+							    volumePercentage:    '50',
+							    widgetSelector:      '#timelineYears',
+							    intervalName:        'year',
+							    subIntervalName:     'month',
+							    isManager:           false,
+						            tilesVisible:        .5,
+							    eventViewType:       'icon'
+							}, dataModel);
 
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
-							  startDate:           defaults.startDate,
-							  volumePercentage:    '30',
-							  widgetSelector:      '#timelineMonths',
-							  intervalName:        'month',
-							  subIntervalName:     'day',
-							  isManager:           false,
-						          tilesVisible:        .5
-						      }, dataModel);
+							     startDate:           defaults.startDate,
+							     volumePercentage:    '30',
+							     widgetSelector:      '#timelineMonths',
+							     intervalName:        'month',
+							     subIntervalName:     'day',
+							     isManager:           false,
+						             tilesVisible:        .5,
+							     eventViewType:       'icon'
+							 }, dataModel);
 
 
 	/*
@@ -218,12 +214,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	var managerStP = 0;
 
-	for (name in widgets) {
-	    if (widgets[name].isManager()) {
-		widgets[name].initialize(defaults.timelineSize, defaults.timelineDir);
-		managerStP = widgets[name].getSecondsToPixels();
-	    }
-	}
+	managerWidget = self.getManager();
+
+	managerWidget.initialize(defaults.timelineSize, defaults.timelineDir);
+	managerStP = widgets[name].getSecondsToPixels();
 
 	// We loop again to set managerStP...better way to do this?
 	for (name in widgets) {
@@ -232,55 +226,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		widgets[name].initialize(defaults.timelineSize, defaults.timelineDir);
 	    }
 	}
-
-
-/*
-
-if size ratio is big tile *sub interval* size divided by  small tile *sub interval* size
-
-   size of a year in decade column / size of a month in year column
-
-and if our calculation for moving the YEAR column when we move the DECADE column is
-
-//  "top": (defaults.smallTileOffset - ((defaults.correlateDecades * defaults.smallUnitBase)/defaults.sizeRatio)) + 'px'   // CSS CHANGE HERE, UNIQUE
-
-year column top -  ( change in position of decade column * 10 [count of months in a year -- sub-intervals in smaller interval column] / ratio [above] )
-
-and if our calculation for moving the DECADE column when we move the YEAR column is
-
-//  "top": (defaults.bigTileOffset - (defaults.correlateYears/defaults.smallUnitBase) * defaults.sizeRatio) + 'px'    // CSS CHANGE HERE, UNIQUE
-
-decade column top -  ( change in position of year column / 10 [count of months in a year -- sub-intervals in smaller interval column] * ratio [above] )
-
-
-So--how do we talk about this abstractly?
-
-We are always basing this on the small interval of the smaller sized column...
-
-hmm...so, we *ALWAYS* want to relate the column with the smaller intervals ( if year and month, then month, if decade and month, then month, etc.) to the larger interval column in the same way...
-
-
-
-so, first thing we do is figure out, out of two columns, which one is dealing with the smaller intervals...rely on model class for this ?
-
-then, we determine the size ratio value for those two columns:
-
-smaller interval column sub-interval size / smaller interval column sub-interval size
-
-after that, we need to determine the equation for the two columns in relationship with each other so that they can be pulled out every time there is a change in the column
-
-(smaller column drag)
--bigger column top - ((change in position of smaller column / count of sub-intervals of smaller column (ADDED VALUE HERE: * the amount of INTERVALS SMALLER COLUMN REPRESENTS ARE IN ONE INTERVAL THAT THE BIGGER COLUMN REPRESENTS...RIGHT? ) * this particular size ratio )
-
-(bigger column drag)
--smaller column top - ((change in position of bigger column * count of sub-intervals of smaller column) / this particular size ratio )
-
-
-The ratio may be wrong here, though, if the values of the columns we are relating isn't directly sequential--so, if we have decades going to months, and we use days (uggh, haven't thought about that yet...hmm...)
-
-
-
-*/
 
 	self.initiateTileEvents();
 
@@ -301,35 +246,6 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		defaults.wasMouseY2 = defaults.mouseY;
 	    });
 
-	/*
-	 * OKAY.  Here's the challenges:
-	 * 
-	 * The main functioning of attaching to the drag event is to make sure the *other* columns move when each column moves.
-	 * When there were just two, that was determined primarily by the sizeRatio.
-	 * However, now that there are an arbitrary number of columns, there needs to be a smarter algorithm.
-	 * It seems dumb to calculate the sizeRatio between every other column but...is it?
-	 * Then we also have to make sure we move *every* other column when the one that is dragged is moved?
-	 * 
-	 * What happens now when you drag a column?
-	 * 
-	 * 1) You get the difference between last position and current position.  Note that this is happening *constantly* so that we have
-	 *     natural interaction with the timeline.
-	 * 
-	 * 2) You determine the change in position of the other column based on sizeRatio (tile to tile) and the change in position.
-	 * 
-	 * 3) You reset the stored change-in-pixels for the *other* column so it doesn't screw everything up by starting from a weird place
-	 *     next time you start draggin *that* column.
-	 * 
-	 * So, what would we need if we were to expand this to all the columns?
-	 * 
-	 * -on initialization, calculate the sizeRatio for every column to every other (insane? only if there are like 20? which will not really happen...?)
-	 * 
-	 * There is one thing I've left out until now--the 'bigTileTop' value, which is for the scaler.  This will have to be calculated for every
-	 *   non-manager column, if I'm reading the code below correctly.
-	 * 
-	 */
-
-
 	// Something in here actually seems to "kick" the tiles into the right position...
 
 	var widgetDragFunctions = {};
@@ -345,25 +261,6 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		var thisEventWidget = self.getWidgetWithSelector(ui.helper.attr('id'));
 
 		thisEventWidget.setDragChange(defaults.wasMouseY - defaults.mouseY);
-
-		/*
-		 * secondsToPixels = seconds/pixels for each widget
-		 * 
-		 * so, if we want to figure out how many pixels move in other columns from this one,
-		 * all we do is take the amount of pixels moved in this one, figure out how many seconds that represents:
-		 * 
-		 * thisEventWidget.secondsToPixels * getDragChange() = secondsMoved
-		 * 
-		 * ...and then we do the reverse to figure out the amount other columns should move: 
-		 * 
-		 * otherEventWidget.secondsToPixels / secondsMoved = pixelsToMove
-		 * 
-		 * and then change it:
-		 * 
-		 * otherEventWidget.setTop(pixelsToMove)
-		 * 
-		 * 
-		 */
 
 		var secondsMoved = thisEventWidget.getSecondsToPixels() * thisEventWidget.getDragChange();
 		var pixelsToMove = 0;
@@ -467,134 +364,6 @@ The ratio may be wrong here, though, if the values of the columns we are relatin
 		defaults.mouseX = e.pageX;
 		defaults.mouseY = e.pageY;
 	    });
-    };
-
-
-
-    /* placeEvents() SHOULD BE PUT IN ITS OWN CLASS? */
-
-    /**
-     *  placeEvents()
-     *    accepts year value for year that needs to be tiled, and eventData containing...event data.
-     * 
-     */
-    self.placeEvents = function (year) {
-
-	// JSON - work in progress:
-	// Temporary variables, turn over to options later
-	var startDate = new Date('Jan 01, ' + year);
-	var endDate   = new Date('Dec 31, ' + year);
-
-	var thisTileEventData = dataModel.getItemsInRange(startDate, endDate);
-
-	// Need to know where to place in dom? Then later, what height is dom?
-	var listSelector = "#list-" + year;
-
-	/* Globals referenced:
-	 * 
-	 * smallUnitSize
-	 * bigUnitSize
-	 * iconWidth
-	 * yearWidth
-	 * startYear
-	 * imgUrl
-	 * 
-	 */
-
-	// THESE WERE IN GLOBAL VARS FILE, BUT NOT NEEDED THERE
-	// Initialize and set defaults for vars that exist outside of each() loop:
-	var wasMonth    = 0;
-	var wasDotCount = 0;
-	var wasPosCount = 0;
-	var switchDir   = false;
-
-	var stop_flag = 0;
-
-	$.each(thisTileEventData, 
-	       function (i, item) {
-
-		   // DATA STUFF --easy date functions w/one date object for all of these?
-		   // well...this will be structured differently, the events will be pulled via JSON,
-		   // and then this will be handled separately from tiling.
-		   var yearDigit      = item.start.getFullYear().toString().substring(3);
-		   var findDecade     = item.start.getFullYear().toString().substring(0, 3);
-		   var thisMonth      = item.start.getMonth();
-		   var thisDay        = item.start.getDate();
-		   var monthLength    = 32 - new Date(thisDay, thisMonth, 32).getDate();
-
-		   // MODEL STUFF
-		   var topPosition    = (thisDay / monthLength) * defaults.smallUnitSize;  // GLOBAL
-		   var leftPosition   = 0;
-
-		   // Get placement for decade icons
-
-		   // Amount to offset decade icon based on month
-		   var monthOffset    = (thisMonth / 12) * defaults.bigUnitSize; // GLOBAL
-
-		   // Additional amount to offset decade icon in addition to month
-		   var dayOffset      = (thisDay / monthLength) * (defaults.bigUnitSize / 12);  // GLOBAL
-		   var bigIconOffset  = monthOffset + dayOffset;
-
-		   var selector       = "#year-" + year + " li." + thisMonth;
-		   var decadeSelector = "#decade-" + findDecade + " li." + yearDigit;
-
-		   // Store in DOM memory the dot count for each month -SHOULD BE STORED IN OBJECT?
-		   if (thisMonth == wasMonth) {
-		       wasDotCount += 1;
-		   } else {
-		       wasDotCount = 1; // Otherwise, reset to one
-		   }
-
-		   leftPosition = wasPosCount * defaults.iconWidth; // how far to indent?  GLOBAL
-
-		   // If we're stacking to right
-		   if (switchDir == false){
-		       wasPosCount += 1; // Continue stacking
-
-		       // But check the next stack
-		       if ((wasPosCount + 1) * defaults.iconWidth >= defaults.yearWidth) {  // GLOBAL (*2)
-			   switchDir = true; // And switch dirs if it overflows
-		       }
-		   } else if (switchDir == true) {   // If we're stacking to the left
-		       wasPosCount -= 1; // Continue stacking
-
-		       // But check the next stack
-		       if ((wasPosCount) * defaults.iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
-			   switchDir = false; // And switch dirs if it overflows
-		       }
-		   }
-
-		   // STORAGE IN DOM...REPLACE!
-		   $(selector).attr("alt", (wasDotCount)); // And store this value as the title
-
-		   wasMonth = thisMonth; // And save / remember what this month is
-
-		   // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
-		   var dotSize = (Math.floor(Math.random() * 5) * 2) + 10;
-
-		   // Place on the small Timeline
-		   // Margin-Top centers the dot half way upward of its image height
-		   $(selector).append(
-		       "<img src='" + defaults.imgUrl + "img/t-50-s-" + dotSize + ".png'"
-			   + " class='eDot " + dotSize + "'"
-			   + " id='chart-" + (item.id) + "'"
-			   + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-			   + " margin-top:-10px; top:" + topPosition + "px;' title=''"
-			   + " alt='" + selector + "'/>"
-		   );
-
-		   // Place on the large timeline
-		   // Margin-Top centers the dot half way upward of its image height
-		   $(decadeSelector).append(
-		       "<img src='" + defaults.imgUrl + "img/event-density.png'"
-			   + " class='eDensity'"
-			   + " id='density-" + (item.id) + "'"
-			   + " style='position:absolute; z-index:3; width:100%; left:0;"
-			   + " margin-top:-20px; top:" + bigIconOffset + "'px;' />"
-		   );
-
-		   // THE MARGIN TOP BEING -20PX IS QUESTIONABLE. IS THIS VALUE COMPENSATING FOR AN UNIDENTIFIED INDENTATION?
-	       });
     };
 
 

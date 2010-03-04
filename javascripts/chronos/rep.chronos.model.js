@@ -426,6 +426,25 @@ repertoire.chronos.model = function(options) {
     };
 
 
+    /*
+     * Needs to be expanded to handle all proportions...?
+     * 
+     */
+    self.getIntervalProportion = function (startDate, subIntervalName, intervalName) {
+
+	if ( subIntervalName == 'day' && intervalName == 'month' ) {
+	    return startDate.getDate() / Date.getDaysInMonth(startDate.getFullYear(), startDate.getMonth());
+	} else if ( subIntervalName == 'month' && intervalName == 'year' ) {
+	    return (startDate.getMonth() + 1) / 12;
+	} else if ( subIntervalName == 'year' && intervalName == 'decade' ) {
+	    return (startDate.getMonth() + 1) / 12;
+	}
+
+	alert('NEED TO COVER THIS CONDITION! subIntervalName: ' + subIntervalName + ', intervalName: ' + intervalName);
+	return 0;
+    };
+
+
     self.getEventsInInterval = function (startDate, subIntervalName) {
 
 	var eventsSelection = [];  // sub-set of events to return

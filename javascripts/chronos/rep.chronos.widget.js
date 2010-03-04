@@ -47,6 +47,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var volumePercentage     = options.volumePercentage    || null;      // Must be set
     var widgetSelector       = options.widgetSelector      || null;      // Must be set
 
+    var eventViewType        = options.eventViewType       || 'icon';
     var tilesVisible         = options.tilesVisible        || 2;
     var ordering             = options.ordering            || null;      // Must be set
 
@@ -107,36 +108,19 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var adjustedTopChangeNoDecimal = parseInt(adjustedTopChange);
 	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
 
-	//var topSetValue = (checkTop - topChange);
 	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
-
 
 	//$("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
 
-
-	$(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
+	// A little hack to let this function handle animation too...
+	if (arguments[1] == true) {
+	    $(widgetSelector).animate({"top": topSetValue + 'px'}, 500);
+	} else {
+	    $(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
+	}
     };
-
-    self.getMyTopSetValueRemainderVal = function () {
-	//$("#dataMonitor #" + widgetSelector +  topSetValueRemainder
-    };
-
 
     self.update = function () {
-	//self.updatePositioning();
-	//$(widgetSelector).css('top', (topChange + 'px'));  // CSS CHANGE HERE
-    };
-
-
-    self.updatePositioning = function () {
-        widgetTop         = parseFloat($(widgetSelector).css('top'));                     // SHOULD BE GENERIC TO ALLOW HORIZONTAL
-
-	// subIntervalHeight = parseFloat($(widgetSelector + ' .oneTile').css('height'));    // SHOULD BE GENERIC TO ALLOW HORIZONTAL
-
-	//alert('widgetSelector + .oneTile ->height = ' + $(widgetSelector + ' .oneTile').css('height'));
-	//alert('subIntervalHeight = ' + subIntervalHeight);
-
-	//topChange         = widgetTop - subIntervalHeight;
     };
 
 
@@ -200,10 +184,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	$(widgetSelector).css('top', widgetOffset);     // CSS CHANGE HERE
 
 	self.checkTiles();
-
-	if (intervalName != 'decade') {
-	    self.loadEvents();
-	}
+	self.loadEvents();
     };
 
 
@@ -246,7 +227,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
      * 
      */
     self.tile = function (tileDir) {
-	//self.updatePositioning();
 
 	/*
 	 * - get 'seconds value' for that interval (in a year column, year)
@@ -358,11 +338,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Want more robust labeling based on config values...
 
 	if (intervalName == 'month') {
-	    if (currentDate.getMonth() == 0) {
-		thisSubIntervalContainerElement.find('.first').html(dataModel.getSubDate(currentDate, intervalName) + ' ' + currentDate.getFullYear());
-	    } else {
-		thisSubIntervalContainerElement.find('.first').html(dataModel.getSubDate(currentDate, intervalName));
-	    }
+	    thisSubIntervalContainerElement.find('.first').html(dataModel.getSubDate(currentDate, intervalName) + ' \'' + currentDate.getYear());
 	} else {
 	    thisSubIntervalContainerElement.find('.first').html(dataModel.getSubDate(currentDate, intervalName));
 	}
@@ -397,7 +373,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// OLD CODE FOR THIS
 
-	// Can we do this all at once with the updatePositioning() call at the end of this function?
+	// Can we do this all at once along with updating positioning at the end of this function?
 	// Splitting it up like this right now follows the old tiling method...
 	// $(selector).css('top', (-1 * (thisSubIntervalContainerElement.css('height')) + 'px'));  // CSS CHANGE HERE
 
@@ -425,9 +401,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
      * 
      */
     self.checkTiles = function() {
-	// resets widgetTop/subIntervalHeight (rename?)
-	// self.updatePositioning();
-
 
 	/* 
 	 * Okay, let's start from scratch and think this through.
@@ -458,8 +431,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 * 
 	 */
 
-	var checkTop    = parseFloat($(widgetSelector).css('top')) * -1;                         // top offset of widget, negated
-	var checkHeight = parseFloat($(widgetSelector).css('height'));  // height of widget   -WHY PARSEFLOAT HERE?
+	var checkTop    = parseFloat($(widgetSelector).css('top')) * -1;    // top offset of widget, negated
+	var checkHeight = parseFloat($(widgetSelector).css('height'));      // height of widget
 
 	/* values
 	alert("checkTop = " + checkTop + ", checkHeight = " + checkHeight + ", managerStP = " + managerStP + ", secondsToPixels = " + secondsToPixels);
@@ -559,44 +532,84 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// Iterate through each rendered tile and generate events?
 
-	var regexp         = new RegExp(intervalName + "_([0-9]{4})_([0-9]{2})_([0-9]{2})-([0-9]{2})_([0-9]{2})_([0-9]{2})_inc([0-9]{1})");
+	var regexp      = new RegExp(intervalName + "_([0-9]{4})_([0-9]{2})_([0-9]{2})-([0-9]{2})_([0-9]{2})_([0-9]{2})_inc([0-9]{1})");
+
+	// Where does this belong?  This should be part of the "visual event" 
+	// (that is, view class that corresponds to individual datetime event model) class, and also be configurable.
+	var iconWidth   = 10;
+	var switchDir   = false;
+
+	var widgetWidth = $(widgetSelector).width();
 
 	$(widgetSelector).find("." + intervalName + "Model").children().children().each(
-	    function(index, element) {
+	    function (index, element) {
+		var wasPosCount    = 0;
+
 		var date_class     = $(element).attr('class').match(regexp);
 		var eventStartDate = dataModel.getDateObject(date_class[1] + '-' + date_class[2] + '-' + date_class[3] + ' ' + date_class[4] + ':' + date_class[5] + ':' + date_class[6]);
 
 		var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName, date_class[7]);
 
-		// alert(events.length);
+		var parentHeight           = $(element).height();
+		var previousTopPosition    = 0;  // Little hacky thing for getting topPositioning right
+		var previousTopPositionAdd = 0;  // Little hacky thing for getting topPositioning right
 
 		for (var i = 0, j = events.length; i < j; i++) {
-		    // for (var i = 0, j = events.length; i < j; i++) {
-		    //alert(events[i]);
 
-		    // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
-		    var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
-		    //var topPosition  = 0;  // Should be (subInterval / amount of subIntervals in interval) * height of this subInterval
-		    //var leftPosition = 0;
-		    // leftPosition = wasPosCount * defaults.iconWidth; // how far to indent?  GLOBAL
+		    var topPosition  = dataModel.getIntervalProportion(events[i].start, subIntervalName, intervalName) * parentHeight;
 
-		    $(element).append(
-			"<img src='" + "javascripts/chronos/" + "img/t-50-s-" + dotSize + ".png'"
-			    + " class='eDot " + dotSize + "'"
-			    + " id='chart-" + events[i].id + "'"
-			    + " alt='" + $(element).attr('class') + "'/>"
-		    );
+		    if (previousTopPosition == topPosition) {
+			previousTopPosition = topPosition;
+			previousTopPositionAdd += 2;
+			topPosition = previousTopPositionAdd + topPosition;
+		    } else {
+			previousTopPosition = topPosition;
+			previousTopPositionAdd = 0;
+		    }
 
-/*
-		   $(element).append(
-		       "<img src='" + "javascripts/chronos/" + "img/t-50-s-" + dotSize + ".png'"
-			   + " class='eDot " + dotSize + "'"
-			   + " id='chart-" + events[i].id + "'"
-			   + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-			   + " margin-top:-10px; top:" + topPosition + "px;' title=''"
-			   + " alt='" + $(element).attr('class') + "'/>"
-		   );
-*/
+		    if (eventViewType == 'icon') {
+
+			var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;  // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
+
+			var leftPosition = 0;
+			leftPosition = wasPosCount * iconWidth; // how far to indent?  GLOBAL
+
+			// If we're stacking to right
+			if (switchDir == false){
+			    wasPosCount += 1; // Continue stacking
+
+			    // But check the next stack
+			    if ((wasPosCount + 1) * iconWidth >= widgetWidth) {
+				switchDir = true; // And switch dirs if it overflows
+			    }
+			} else if (switchDir == true) {   // If we're stacking to the left
+			    wasPosCount -= 1; // Continue stacking
+
+			    // But check the next stack
+			    if ((wasPosCount) * iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
+				switchDir = false; // And switch dirs if it overflows
+			    }
+			}
+
+			$(element).append(
+			    "<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
+				+ " class='eDot " + dotSize + "'"
+				+ " id='event-" + events[i].id + "'"
+				+ " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
+				+ " margin-top:-10px; top:" + topPosition + "px;' title=''"
+				+ " alt='" + $(element).attr('class') + "'/>"
+			);
+
+		    } else if (eventViewType == 'density') {
+			$(element).append(
+			    "<img src='javascripts/chronos/img/event-density.png'"
+				+ " class='eDensity'"
+				+ " id='density-" + (events[i].id) + "'"
+				+ " style='position:absolute; z-index:3; width:100%; left:0;"
+				+ " margin-top:-20px; top:" + topPosition + "'px;' />"
+			);
+		    }
+		
 		}
 	    }
 	);
