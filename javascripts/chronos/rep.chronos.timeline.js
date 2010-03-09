@@ -175,7 +175,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							      intervalName:        'decade',
 							      subIntervalName:     'year',
 							      isManager:           true,
-						              tilesVisible:        .25,
+						              intervalsVisible:    .25,
 							      eventViewType:       'density'
 							  }, dataModel);
 
@@ -186,7 +186,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							    intervalName:        'year',
 							    subIntervalName:     'month',
 							    isManager:           false,
-						            tilesVisible:        .5,
+						            intervalsVisible:    .25,
 							    eventViewType:       'icon'
 							}, dataModel);
 
@@ -197,7 +197,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							     intervalName:        'month',
 							     subIntervalName:     'day',
 							     isManager:           false,
-						             tilesVisible:        .5,
+						             intervalsVisible:    .5,
 							     eventViewType:       'icon'
 							 }, dataModel);
 

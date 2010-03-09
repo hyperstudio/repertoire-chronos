@@ -224,11 +224,6 @@ repertoire.chronos.model = function(options) {
 	//for (var i = 0; i <= monthCount; i++) {
 	for (var i = 0; i <= 11; i++) {
 	    totalYearSeconds += (dateTimeConstants.day * Date.getDaysInMonth(startYear, i));
-/*
-	    if (arguments[1] == 'test!') {
-		alert(startYear + ', ' + i + ', ' + Date.getDaysInMonth(startYear, i));
-	    }
-*/
 	}
 
 	return totalYearSeconds;

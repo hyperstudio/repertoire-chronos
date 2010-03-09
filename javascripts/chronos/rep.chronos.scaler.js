@@ -102,6 +102,63 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 					origScaler = defaults.scalerSize;  // Used??
 				    }
 				});
+
+/*
+
+ when resizing the scaler
+ we change the relationship of the scaler to the 'scaler view widget' in terms of how much space
+ should be represented in the 'scaler view widget' which corresponds to the space shown in the scaler
+ fundamentally, we are just re-calculating the secondsToPixels value for the other widgets and regenerating/resizing those widgets
+
+ -new values:
+
+ each widget's secondsToPixels val
+ also, intervalsVisible will change to fit new secondsToPixels...although may not need to tweak this...?
+
+can we just save old secondsToPixels, multiply by new secondsToPixels, and then multiply the height of all the elements by that?
+let's try and see!
+
+the calculation to change secondsToPixels is:
+
+the scaler is always using the same amount of seconds to pixels as manager widget.
+
+so, the proportion of scaler seconds to pixels to widget seconds to pixels is same as manager seconds to pixels to widget seconds to pixels.
+
+when we first generate the scaler, the size corresponds to what you can see in the 'scaler view widget'
+
+so, when we change the scaler size, we use this same equation, but change which values we substitute:
+
+
+	defaults.scalerSize = timeline.getProperty('timelineSize') / ( timeline.getManager().getSecondsToPixels() / scalerViewWidget.getSecondsToPixels() );
+
+the variable instead is "scalerViewWidget.getSecondsToPixels()," so:
+
+scalerViewWidget's newSecondsToPixels = ( timeline.getProperty('timelineSize') / timeline.getManager().getSecondsToPixels() ) * ( 1 / defaults.scalerSize );
+
+and then the amount to change the currently rendered widget stuff by is:
+
+oldSecondsToPixels / newSecondsToPixels
+
+that's it?
+
+No!
+
+The problem is that this works for the scalerViewWidget, but not for any others.
+
+So, we need a new equation for the other widgets.
+
+the relative change in secondsToPixels value for the scalerViewWidget should be the same for the other widgets.
+
+so, we can use this:
+
+
+otherWidget.secondsToPixels ( scalerViewWidget.secondsToPixels / scalerViewWidget.oldSecondsToPixels ) = otherWidget.newSecondsToPixels
+
+right?
+   
+
+*/
+
     };
 
 
@@ -116,7 +173,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	var scalerPosChange   = 0;
 	var resetScalerTop    = 0;
 
-	var scalerDragStop    = function (event, ui) {
+	var scalerStop    = function (event_type) {
 	    currentScalerTop = parseFloat(scalerElement.css("top"));
 
 	    scalerPosChange = previousScalerTop - currentScalerTop;
@@ -136,9 +193,29 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		}
 	    );
 
+	    if (event_type == 'resize') {
+		if (scalerPosChange < 1 && scalerPosChange > -1) {
+		    scalerPosChange = ( defaults.oldScalerSize - defaults.scalerSize ) / 2;
+		} else {
+		    scalerPosChange = ( scalerPosChange / 2 );
+		}
+	    }
+
 	    // Update top position for manager:
 	    timeline.getManager().setTop( scalerPosChange * -1, true );
 
+	    // We move the other widgets here if we are resizing, whereas for dragging scaler they move along with drag:
+	    if (event_type == 'resize') {
+		var secondsMoved = timeline.getManager().getSecondsToPixels() * scalerPosChange;
+		var pixelsToMove = 0;
+
+		for (name in widgets) {
+		    if (!widgets[name].isManager()) {
+			pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
+			widgets[name].setTop(pixelsToMove * -1, true);
+		    }
+		}
+	    }
 	    previousScalerTop = resetScalerTop;
 	};
 
@@ -176,28 +253,50 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		    timeline.setProperty('wasMouseY', timeline.getProperty('mouseY'));  // Memory for mouse position
 		},
 
-		stop: scalerDragStop
+		stop: function () { scalerStop( 'drag' ); }
 	    });
+
 
 	scalerElement.bind('resize',
 			  function(event, ui) {
+
 			      // Store reset scaler size so we can adjust on stop:
 			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getProperty('timelineDir')));
 
 			      // Adjust 'innerScaler' element size to match, responsible for keeping arrows "synced:"
 			      innerScalerElement.css(timeline.getProperty('timelineDir'), defaults.newScalerSize);
+
+			      // First we adjust the scalerViewWidget since we need it for others:
+			      scalerViewWidget.setSecondsToPixels(
+				  timeline.getManager().getSecondsToPixels() * ( defaults.newScalerSize / timeline.getProperty('timelineSize') )
+			      );
+
+			      var inc = 1;
+
+			      scalerViewWidget.resizeWidget(scalerViewWidget.getSelector(), inc);
+
+			      // Then we process the rest of the widgets:
+			      for (name in widgets) {
+				  if (!widgets[name].isManager() && scalerViewWidget.getSelector() != widgets[name].getSelector()) {
+				      inc++;
+				      widgets[name].setSecondsToPixels(
+                            		  widgets[name].getSecondsToPixels() * (scalerViewWidget.getSecondsToPixels() / scalerViewWidget.getOldSecondsToPixels())
+				      );
+				      widgets[name].resizeWidget(widgets[name].getSelector(), inc);
+				  }
+			      }
 			  });
 
 	scalerElement.bind('resizestop',
 			  function(event, ui) {
-			      // defaults.oldScalerSize = defaults.scalerSize;
+			      defaults.oldScalerSize = defaults.scalerSize;
 
 			      // Now that we've stopped, reset the scaler size ("length").
 			      // This also ensures that the functionality in scalerDragStop() works properly:
 			      defaults.scalerSize = defaults.newScalerSize;
 
 			      // Same thing as when we drag; re-center the scaler, and adjust position of manager widget to match:
-			      scalerDragStop();
+			      scalerStop( 'resize' );
 			  });
 
     };

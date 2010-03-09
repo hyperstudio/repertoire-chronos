@@ -48,8 +48,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var widgetSelector       = options.widgetSelector      || null;      // Must be set
 
     var eventViewType        = options.eventViewType       || 'icon';
-    var tilesVisible         = options.tilesVisible        || 2;
-    var ordering             = options.ordering            || null;      // Must be set
+    var intervalsVisible     = options.intervalsVisible        || 2;
 
     var intervalName         = options.intervalName        || 'decade';  // Name of unit a single tile represents.
     var subIntervalName      = options.subIntervalName     || 'year';    // Name of sub-unit. For example, if the column tiles are years, the sub-unit is a month.
@@ -70,6 +69,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
     // Our global seconds-to-pixels ratio used for both dragging ratio with other columns as well as generating new tiles:
     var secondsToPixels   = 0;
+    var oldSecondsToPixels = 0;  // For scaling purposes
 
     // We initialize bottomDate by decrementing in *reverse* of 
     // how it is incremented in tile function to assure we have
@@ -143,11 +143,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	// WHAT DO WE DO WITH REMAINDER?
-	if (widgetSelector == '#timelineMonths') {
-	    secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName, widgetSelector) / (timelineSize / tilesVisible);
-	} else {
-	    secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName) / (timelineSize / tilesVisible);
-	}
+	secondsToPixels = dataModel.getSecondsInInterval(startDate, intervalName) / (timelineSize / intervalsVisible);
+	oldSecondsToPixels = secondsToPixels;  // just to initialize for first scaler resize.
 
 	// Create initial widget HTML element and add id/classes:
 	var mainWidgetElement = $('<div />').appendTo($(selector));
@@ -158,7 +155,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// if we don't set this to initialize we just get 'auto' and it throws everything off.
 	$(widgetSelector).css('top', '0px');
-
 
 	// Now, generate our first tile.  We use this to center the widget and then build the rest of the tiles.
 	var initialTileSize = self.tile('up');
@@ -188,10 +184,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    self.getOrdering = function () {
-	return ordering;
-    };
-
     self.getSelector = function () {
 	return widgetSelector;
     };
@@ -200,12 +192,23 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	return isManager;
     };
 
+    self.setManagerStP = function (initManagerStP) {
+	managerStP = initManagerStP;
+    };
+
     self.getSecondsToPixels = function () {
 	return secondsToPixels;
     };
 
-    self.setManagerStP = function (initManagerStP) {
-	managerStP = initManagerStP;
+    /* fucks everything up!? */
+    self.setSecondsToPixels = function (newSecondsToPixels) {
+	$("#dataMonitor #stpSetting span.data").html( 'newSecondsToPixels = ' + newSecondsToPixels + ', oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels );
+	oldSecondsToPixels = secondsToPixels;
+	secondsToPixels    = newSecondsToPixels;
+    };
+
+    self.getOldSecondsToPixels = function () {
+	return oldSecondsToPixels;
     };
 
 
@@ -386,6 +389,42 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 
     /*
+     *  Does the work of resizing the tiles based on new secondsToPixels value.
+     */
+    self.resizeWidget = function (name, inc) {
+
+	// Again, should be done in widget class, triggered by 'change in STP' event?
+	var stpMultiplier = oldSecondsToPixels / secondsToPixels;
+
+	$("#dataMonitor #newStp"+ inc + " span.dataTitle").html(name + ": ");
+	$("#dataMonitor #newStp"+ inc + " span.data").html( 'oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels + ', stpMultiplier = ' + stpMultiplier );
+
+	// Make this ('li' I mean) get pulled from config...also see tile() function:
+	$(widgetSelector + ' .oneTile li').each(
+	    function () {
+		$(this).css("height", parseInt($(this).css("height")) * stpMultiplier);          // assign height to the fix size
+	    }
+	);
+
+	/*
+	 * NOT WORKING:
+	 */
+	// we have to reposition the widget appropriately now:
+	var oldTop  = parseFloat($(widgetSelector).css('top'));
+        oldTop     -= (timelineSize / 2);                                      // remove centering before we do fraction calculation
+	var newTop  = (oldTop * stpMultiplier) + (timelineSize / 2);          // the old top x stpMultiplier + half the timeline screen (for centering)
+
+	$("#dataMonitor #oldTop span.data").html(oldTop);
+	$("#dataMonitor #newTop span.data").html(newTop);
+
+  	$(widgetSelector).css("top", newTop);
+
+
+	return stpMultiplier;
+    };
+
+
+    /*
      * 
      * Reviewing now that this is more or less implemented based on 'old model.'  We have a new problem, which is that,
      *  since we have much more possibilities for durations now, we are dealing with really expensive code in order to generate
@@ -433,13 +472,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	var checkTop    = parseFloat($(widgetSelector).css('top')) * -1;    // top offset of widget, negated
 	var checkHeight = parseFloat($(widgetSelector).css('height'));      // height of widget
-
-	/* values
-	alert("checkTop = " + checkTop + ", checkHeight = " + checkHeight + ", managerStP = " + managerStP + ", secondsToPixels = " + secondsToPixels);
-	alert("managerStP / secondsToPixels = " + (managerStP / secondsToPixels));
-	alert("timelineSize = " + timelineSize);
-	alert("timelineSize * (managerStP / secondsToPixels) = " + (timelineSize * (managerStP / secondsToPixels)));
-	 */
 
 	var tileFactor  = 0;                                      // Only used when tiling 'non-manager' column, represents how many tiles we need in proportion to 'manager' column
 	var upTest, downTest;                                     // Hold functions which return boolean values based on positioning/height tests
@@ -491,7 +523,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// This happens afterwards 'cause we may have changed the non-manager columns?
 	if (!isManager) {
 	    checkHeight = parseFloat($(widgetSelector).css('height'));   // height of entire column
-//	    self.updatePositioning();
 	    checkTop = (widgetOffset * -1); // top offset of Timeline
 	}
 
@@ -540,11 +571,10 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var switchDir   = false;
 
 	var widgetWidth = $(widgetSelector).width();
+	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
 
 	$(widgetSelector).find("." + intervalName + "Model").children().children().each(
 	    function (index, element) {
-		var wasPosCount    = 0;
-
 		var date_class     = $(element).attr('class').match(regexp);
 		var eventStartDate = dataModel.getDateObject(date_class[1] + '-' + date_class[2] + '-' + date_class[3] + ' ' + date_class[4] + ':' + date_class[5] + ':' + date_class[6]);
 
@@ -601,6 +631,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			);
 
 		    } else if (eventViewType == 'density') {
+/*
 			$(element).append(
 			    "<img src='javascripts/chronos/img/event-density.png'"
 				+ " class='eDensity'"
@@ -608,6 +639,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				+ " style='position:absolute; z-index:3; width:100%; left:0;"
 				+ " margin-top:-20px; top:" + topPosition + "'px;' />"
 			);
+*/
 		    }
 		
 		}

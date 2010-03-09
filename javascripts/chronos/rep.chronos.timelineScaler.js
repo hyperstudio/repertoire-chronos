@@ -210,7 +210,7 @@ repertoire.chronos.timelineScaler = function(selector, options, timelineWidget) 
 				  });
 
 			      thisTimelineWidget.setProperty('smallTileSize', thisTimelineWidget.getProperty('smallUnitBase') * defaults.newSmallUnitSize);
-			      
+
 			      $(".oneYear").each(
 				  function(i){
 				      var fixSmallTileSize = parseInt(thisTimelineWidget.getProperty('smallTileSize')); // set fix size to an integer
