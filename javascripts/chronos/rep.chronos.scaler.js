@@ -260,6 +260,9 @@ right?
 	scalerElement.bind('resize',
 			  function(event, ui) {
 
+			      scalerPosChange = previousScalerTop - currentScalerTop;
+
+
 			      // Store reset scaler size so we can adjust on stop:
 			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getProperty('timelineDir')));
 
@@ -277,12 +280,44 @@ right?
 
 			      // Then we process the rest of the widgets:
 			      for (name in widgets) {
+
+				  defaults.oldScalerTop = defaults.newScalerTop;
+				  defaults.newScalerTop = parseFloat($("#scaler").css("top"));
+
 				  if (!widgets[name].isManager() && scalerViewWidget.getSelector() != widgets[name].getSelector()) {
 				      inc++;
 				      widgets[name].setSecondsToPixels(
                             		  widgets[name].getSecondsToPixels() * (scalerViewWidget.getSecondsToPixels() / scalerViewWidget.getOldSecondsToPixels())
 				      );
 				      widgets[name].resizeWidget(widgets[name].getSelector(), inc);
+
+
+				      /*
+				       * NOT WORKING:
+				       */
+				      // we have to reposition the widget appropriately now:
+				      var oldTop  = parseFloat($(widgetSelector).css('top'));
+				      oldTop     -= (timelineSize / 2);                                      // remove centering before we do fraction calculation
+				      var newTop  = (oldTop * stpMultiplier) + (timelineSize / 2);          // the old top x stpMultiplier + half the timeline screen (for centering)
+
+				      $("#dataMonitor #oldTop span.data").html(oldTop);
+				      $("#dataMonitor #newTop span.data").html(newTop);
+
+				      // If top of scaler moved, offset the centering one way
+				      if (defaults.oldScalerTop != defaults.newScalerTop) {
+					  var scalerTopDiff  = (defaults.oldScalerTop - defaults.newScalerTop) / 2; // (divide by two because we're only sliding one direction)
+					  var scalerFraction = scalerTopDiff * scalerViewWidget.getSecondsToPixels();
+				      }
+				      // Else, if bottom slider moved, offset the centering the other way
+				      else {
+					  var scalerSizeDiff = (defaults.oldScalerSize - defaults.newScalerSize) / 2; // (divide by two because we're only sliding one direction)
+					  var scalerFraction = scalerSizeDiff * scalerViewWidget.getSecondsToPixels();
+				      }
+
+				      defaults.newTop += (scalerFraction * widgets[name].getSecondsToPixels());  // Timeline scaler offset
+
+  				      $(widgetSelector).css("top", parseInt(newTop));
+
 				  }
 			      }
 			  });

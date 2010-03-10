@@ -406,21 +406,12 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    }
 	);
 
-	/*
-	 * NOT WORKING:
-	 */
-	// we have to reposition the widget appropriately now:
-	var oldTop  = parseFloat($(widgetSelector).css('top'));
-        oldTop     -= (timelineSize / 2);                                      // remove centering before we do fraction calculation
-	var newTop  = (oldTop * stpMultiplier) + (timelineSize / 2);          // the old top x stpMultiplier + half the timeline screen (for centering)
-
-	$("#dataMonitor #oldTop span.data").html(oldTop);
-	$("#dataMonitor #newTop span.data").html(newTop);
-
-  	$(widgetSelector).css("top", newTop);
-
-
 	return stpMultiplier;
+    };
+
+
+    self.adjustTop = function () {
+	return false;
     };
 
 
