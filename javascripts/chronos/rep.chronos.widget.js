@@ -87,9 +87,19 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var originalTop          = 0;
     var masterTop            = 0;
 
+    var topPositionRatio     = 0;
 
 
     // PUBLIC
+
+    self.getTopPositionRatio = function () {
+	return topPositionRatio;
+    };
+
+    self.resetTopPositionRatio = function () {
+	topPositionRatio = self.getTop() / self.getSize();
+	return topPositionRatio;
+    };
 
     self.getDragChange = function () {
 	return pixelDragChange;
@@ -100,6 +110,13 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	return pixelDragChange;
     };
 
+    self.getSize = function () {
+	return parseFloat($(widgetSelector).css('height'));
+    };
+
+    self.getTop = function () {
+	return parseFloat($(widgetSelector).css('top'));
+    };
 
     self.setTop = function (topChange) {
 	var checkTop = parseFloat($(widgetSelector).css('top'));
@@ -178,6 +195,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	widgetOffset = Math.ceil(timelineSize / 2 + (dataModel.getSubIntervalDiff(startDate, subIntervalName) / secondsToPixels));
 	$(widgetSelector).css('top', widgetOffset);     // CSS CHANGE HERE
+
+	// Needed for scaling:
+	topPositionRatio = self.getTop() / self.getSize();
 
 	self.checkTiles();
 	self.loadEvents();
@@ -391,22 +411,45 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     /*
      *  Does the work of resizing the tiles based on new secondsToPixels value.
      */
-    self.resizeWidget = function (name, inc) {
+    self.resize = function () {
 
-	// Again, should be done in widget class, triggered by 'change in STP' event?
-	var stpMultiplier = oldSecondsToPixels / secondsToPixels;
+	// We have to regenerate all the heights properly using same remainder mechanism as before:
+	// (can we make this into a function which we use in both places?)
 
-	$("#dataMonitor #newStp"+ inc + " span.dataTitle").html(name + ": ");
-	$("#dataMonitor #newStp"+ inc + " span.data").html( 'oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels + ', stpMultiplier = ' + stpMultiplier );
+	var subIntervalHeightRemainder = 0;
 
-	// Make this ('li' I mean) get pulled from config...also see tile() function:
-	$(widgetSelector + ' .oneTile li').each(
+	$(widgetSelector + ' .oneTile').each(
 	    function () {
-		$(this).css("height", parseInt($(this).css("height")) * stpMultiplier);          // assign height to the fix size
-	    }
-	);
 
-	return stpMultiplier;
+		var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})");
+		var dateClass       = $(this).attr('class').match(dateClassRegExp);
+		var thisDate        = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+
+		$("#dataMonitor #dates span.data").html(widgetSelector + ' ' + thisDate.toString());
+
+		var newSubIntervalSize = dataModel.getSecondsInInterval(thisDate, subIntervalName) / secondsToPixels;
+
+		// Now we add the sub-intervals themselves:
+		$(this).find('li').each(
+		    function () {
+
+			// Now, we have to keep the decimal remainder and add it to the previous value...then add that to the height, and take the decimal remainder
+			var thisDecimal = newSubIntervalSize - parseInt(newSubIntervalSize);                              // Splits off decimal value
+			subIntervalHeightRemainder += thisDecimal;                                                        // We add to previous remainder...
+			var thisSubIntervalHeight = parseInt(newSubIntervalSize) + parseInt(subIntervalHeightRemainder);  // ...then we see if we have a > 1 value, and add that to the integer value of calculated height.
+			subIntervalHeightRemainder = subIntervalHeightRemainder - parseInt(subIntervalHeightRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
+
+			// NOW, we can set the height of sub-interval element:
+			$(this).css(timelineDir, thisSubIntervalHeight);
+		    }
+		);
+
+		// USING THIS!?
+		// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
+		// thisSubIntervalContainerElement.addClass(subIntervalHeightRemainder.toString());
+	});
+
+	return true;
     };
 
 
@@ -552,9 +595,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 * 
 	 */
 
-	// Iterate through each rendered tile and generate events?
-
-	var regexp      = new RegExp(intervalName + "_([0-9]{4})_([0-9]{2})_([0-9]{2})-([0-9]{2})_([0-9]{2})_([0-9]{2})_inc([0-9]{1})");
+	// Iterate through each rendered tile and generate events
 
 	// Where does this belong?  This should be part of the "visual event" 
 	// (that is, view class that corresponds to individual datetime event model) class, and also be configurable.
@@ -564,12 +605,15 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var widgetWidth = $(widgetSelector).width();
 	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
 
+	// This regexp is used to match on the class we generate from the date to place in tiles.
+	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1})");
+
 	$(widgetSelector).find("." + intervalName + "Model").children().children().each(
 	    function (index, element) {
-		var date_class     = $(element).attr('class').match(regexp);
-		var eventStartDate = dataModel.getDateObject(date_class[1] + '-' + date_class[2] + '-' + date_class[3] + ' ' + date_class[4] + ':' + date_class[5] + ':' + date_class[6]);
+		var dateClass     = $(element).attr('class').match(dateClassRegExp);
+		var eventStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
 
-		var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName, date_class[7]);
+		var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName, dateClass[7]);
 
 		var parentHeight           = $(element).height();
 		var previousTopPosition    = 0;  // Little hacky thing for getting topPositioning right
@@ -577,6 +621,10 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 		for (var i = 0, j = events.length; i < j; i++) {
 
+		    /*
+		     *  DAVE: YOU ARE NOT TAKING INTO ACCOUNT THE SPECIFIC DISTANCE FROM TOP HEIGHT 
+		     *  THAT CAN BE GENERATED BY SECONDS -> PIXELS HERE!  THIS WILL FIX WEIRDNESS, THEORETICALLY!
+		     */
 		    var topPosition  = dataModel.getIntervalProportion(events[i].start, subIntervalName, intervalName) * parentHeight;
 
 		    if (previousTopPosition == topPosition) {
