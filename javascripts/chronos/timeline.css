@@ -77,5 +77,6 @@ html, body {height:100%;} /* 100% timeline is a choice, you may change it */
 	
 /* reorganize later */
 
-#dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px dotted red; width: 300px; }
+#dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px dotted red; width: 700px; }
+#dataMonitor div { margin-bottom: 15px; }
 #dataMonitor span.dataTitle { font-weight: bold; color: #f85; }

@@ -172,14 +172,14 @@ right?
 	var currentScalerTop  = 0;
 	var scalerPosChange   = 0;
 	var resetScalerTop    = 0;
-	var oldsVWTop         = scalerViewWidget.getTop();
-	var oldsVWSize        = scalerViewWidget.getSize();
-	var topPositionRatio  = (oldsVWTop * -1) / oldsVWSize;
 
+	// Initialize for all widgets as generating tiles may have changed this from widget initialization:
 	for (name in widgets) {
 	    widgets[name].resetTopPositionRatio();
+	    widgets[name].getBottomPositionRatio();
 	}
 
+	// Callback for stop event:
 	var scalerStop    = function (event_type) {
 	    currentScalerTop = parseFloat(scalerElement.css("top"));
 
@@ -194,7 +194,7 @@ right?
 		function() {
 		    innerScalerElement.removeClass("on");
 
-		    // CHECK TILES/EVENTS!
+		    // CHECK TILES/EVENTS!?
 		    // ...checkTiles();
 		    // ...update();
 		}
@@ -211,22 +211,34 @@ right?
 	    // Update top position for manager:
 	    timeline.getManager().setTop( scalerPosChange * -1, true );
 
-	    // We move the other widgets here if we are resizing, whereas for dragging scaler they move along with drag:
+	    // For moving all the *other* widgets other than Manager and SVW:
 	    if (event_type == 'resize') {
 		var secondsMoved = timeline.getManager().getSecondsToPixels() * scalerPosChange;
 		var pixelsToMove = 0;
-
-		for (name in widgets) {
-		    if (!widgets[name].isManager()) {
-			pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
-			widgets[name].setTop(pixelsToMove, true);
-		    }
-		}
 	    }
 
-	    // This needs to be reset since movement will change ratio: 
+	    /*
+	     * Something here is not quite right; the *other* widget is 
+	     * moving a bit too much and doesn't sync up after a resize.
+	     * 
+	     * However, it's better than it was before; clearly the other
+	     * widgets need to be moved after a resize (vs. SVW).
+	     * 
+	     */
 	    for (name in widgets) {
+
+		if (event_type == 'resize') {
+		    // We have to adjust the *other* widgets since they don't
+		    // move nicely within scaler/scalerViewWidget proportions:
+		    if ( !widgets[name].isManager() && (scalerViewWidget.getSelector() != widgets[name].getSelector()) ) {
+			pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
+			widgets[name].setTop(pixelsToMove * -1, true);
+		    }
+		}
+
+		// This needs to be reset for all since movement will change ratio: 
 		widgets[name].resetTopPositionRatio();
+		widgets[name].resetBottomPositionRatio();
 	    }
 
 	    previousScalerTop = resetScalerTop;
@@ -270,11 +282,24 @@ right?
 	    });
 
 
+
+	scalerElement.bind('resizestart',
+			  function(event, ui) {
+			      $("#dataMonitor #initial span.data").html(
+				  "<br />initial top: " + scalerViewWidget.getTop()
+				      + ",<br /> initial size: " + scalerViewWidget.getSize()
+				      + ", initial topPositionRatio: <br />" + scalerViewWidget.getTopPositionRatio()
+				      + ",<br /> initial bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
+
+			      timeline.setProperty('wasMouseY', timeline.getProperty('mouseY'));
+			  });
+
 	scalerElement.bind('resize',
 			  function(event, ui) {
 
 			      // previousScalerTop seems to be recorded between different *stop* events rather than during resize?
-			      scalerPosChange = previousScalerTop - currentScalerTop;
+			      // scalerPosChange = previousScalerTop - currentScalerTop;
+			      scalerPosChange = timeline.getProperty('wasMouseY') - timeline.getProperty('mouseY');
 
 			      // Store reset scaler size so we can adjust on stop:
 			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getProperty('timelineDir')));
@@ -295,22 +320,41 @@ right?
 			      var newTopChange = 0;
 
 			      // Top scaler handle drag:
-			      if (defaults.oldScalerTop != defaults.newScalerTop) {
-				  newTopChange = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize()) + (scalerViewWidget.getTop() + timeline.getProperty('timelineSize'));
+			      if (parseInt(defaults.oldScalerTop) != parseInt(defaults.newScalerTop)) {
+				  // WTF IS UP WITH THIS!?
+				  // newTop = ( ( scalerViewWidget.getBottomPositionRatio() * -1 ) * scalerViewWidget.getSize() ) + ( timeline.getProperty('timelineSize') / 2 );
+
+				  /*  Mathing it up
+				  bottomPositionRatio = ( (self.getTop() - timelineSize) / self.getSize() ) * -1;
+				  bottomPositionRatio = - self.getTop() + - timelineSize / - self.getSize();
+				  bottomPositionRatio * - self.getSize() =  - self.getTop() + - timelineSize;
+				  (bottomPositionRatio * - self.getSize()) + timelineSize = - self.getTop();
+				   */
+
+				  newTop = (scalerViewWidget.getBottomPositionRatio() * (-1 * scalerViewWidget.getSize())) + timeline.getProperty('timelineSize');
+
+				  $("#dataMonitor #dragtype span.data").html('scaler top drag!');
 			      // Bottom scaler handle drag:
-			      } else {
-				  newTop       = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize());
-				  newTopChange = ((scalerViewWidget.getTopPositionRatio() * -1) * scalerViewWidget.getSize()) + scalerViewWidget.getTop();
+			      } else if (parseInt(scalerPosChange) != 0) {
+				  $("#dataMonitor #dragtype span.data").html('scaler bottom drag!');
+				  newTop = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize()) * -1;
 			      }
 
-			      scalerViewWidget.setTop(newTopChange);
-
-			      $("#dataMonitor #oldTop span.data").html(
+			      $("#dataMonitor #svw span.data").html(
 				  "<br />current top: " + scalerViewWidget.getTop()
-				      + ",<br /> old bottom: " + timeline.getProperty('timelineSize')
-				      + ", topPositionRatio: <br />" + scalerViewWidget.getTopPositionRatio()
-				      + ",<br /> newTop: " + newTop
-				      + ",<br /> newTopChange: " + newTopChange);
+				      + ",<br />current size: " + scalerViewWidget.getSize()
+				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />newTop: " + newTop
+				      // + ",<br />newTopChange: " + newTopChange,
+				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
+
+			      if (parseInt(newTop) != 0) {
+				  $("#dataMonitor #newtop span.data").html(newTop);
+				  $(scalerViewWidget.getSelector()).css('top', newTop + 'px');  // CSS CHANGE HERE
+			      }
+
+			      // Makes things more complicated...
+			      // scalerViewWidget.setTop(newTopChange);
 
 
 			      // Then we process the rest of the widgets:
@@ -325,18 +369,27 @@ right?
 
 				      widgets[name].resize();
 
-				      // Reset and re-use for other widgets
-				      newTopChange = 0;
+				      var newTopChangeW = 0;
+				      var newTopW       = 0;
 
 				      // Top scaler handle drag:
 				      if (defaults.oldScalerTop != defaults.newScalerTop) {
-					  // newTopChange = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize()) + (scalerViewWidget.getTop() + timeline.getProperty('timelineSize'));
-					  // Bottom scaler handle drag:
+					  newTopChangeW = ((widgets[name].getBottomPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
+                                      // Bottom scaler handle drag:
 				      } else {
-					  newTopChange = ((widgets[name].getTopPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
+					  newTopW       = (widgets[name].getTopPositionRatio() * widgets[name].getSize());
+					  // newTopChangeW = ((widgets[name].getTopPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
+					  newTopChangeW = ((widgets[name].getTopPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
 				      }
 
-				      widgets[name].setTop(newTopChange);
+				      $("#dataMonitor #ow span.data").html(
+					  "<br />current top: " + widgets[name].getTop()
+					      + ",<br /> old bottom: " + timeline.getProperty('timelineSize')
+					      + ", topPositionRatio: <br />" + widgets[name].getTopPositionRatio()
+					      + ",<br /> newTopW: " + newTopW
+					      + ",<br /> newTopChangeW: " + newTopChangeW);
+
+				      // widgets[name].setTop(newTopChangeW);
 				  }
 
 			      }
@@ -344,15 +397,12 @@ right?
 			      defaults.oldScalerTop  = defaults.newScalerTop;
 			      defaults.oldScalerSize = defaults.newScalerSize;
 
+			      timeline.setProperty('wasMouseY', timeline.getProperty('mouseY'));
 			  });
 
 	scalerElement.bind('resizestop',
 			  function(event, ui) {
 			      defaults.oldScalerSize = defaults.scalerSize;
-
-			      for (name in widgets) {
-				  widgets[name].resetTopPositionRatio();
-			      }
 
 			      // Now that we've stopped, reset the scaler size ("length").
 			      // This also ensures that the functionality in scalerDragStop() works properly:

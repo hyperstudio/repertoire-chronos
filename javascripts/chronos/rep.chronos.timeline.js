@@ -170,7 +170,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.decadesWidget = repertoire.chronos.widget(mainSelector, {
 							      startDate:           defaults.startDate,
-							      volumePercentage:    '20',
+							      volumePercentage:    '30',
 							      widgetSelector:      '#timelineDecades',
 							      intervalName:        'decade',
 							      subIntervalName:     'year',
@@ -181,7 +181,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
 							    startDate:           defaults.startDate,
-							    volumePercentage:    '50',
+							    volumePercentage:    '70',
 							    widgetSelector:      '#timelineYears',
 							    intervalName:        'year',
 							    subIntervalName:     'month',
@@ -189,7 +189,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						            intervalsVisible:    .25,
 							    eventViewType:       'icon'
 							}, dataModel);
-
+/*
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
 							     startDate:           defaults.startDate,
 							     volumePercentage:    '30',
@@ -200,7 +200,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						             intervalsVisible:    .5,
 							     eventViewType:       'icon'
 							 }, dataModel);
-
+*/
 
 	/*
 	 * First we have to figure out the 'manager' secondsToPixels value.
@@ -251,7 +251,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	var widgetDragFunctions = {};
 	var widgetStopFunctions = {};
 
-	//for (var w = 0; w < widgets.length; w++) {
 	for (name in widgets) {
 
 	    // We have to build functions before calling draggable so that we are referring 
@@ -295,7 +294,16 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		var thisEventWidget = self.getWidgetWithSelector(ui.helper.attr('id'));
 
 		for (name in widgets) {
+		    // Bit of a hack but in here for now to make sure we are doing this at all...
+		    // if it is in the above, then it slows things down dramatically.  Need new
+		    // methodology.
 		    widgets[name].checkTiles();
+
+		    // This needs to be reset for all since movement will change ratio:
+		    // (and it must happen after checkTiles(), since that will alter
+		    //  the top and size of the the widget!)
+		    widgets[name].resetTopPositionRatio();
+		    widgets[name].resetBottomPositionRatio();
 		}
 	    };
 
@@ -307,12 +315,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						      stop: widgetStopFunctions[name]
 						  });
 	}
-
-	for (blah in widgetDragFunctions) {
-	    //alert(widgetDragFunctions[blah]);
-	    //widgetDragFunctions[blah]();
-	}
-
     };
 
 

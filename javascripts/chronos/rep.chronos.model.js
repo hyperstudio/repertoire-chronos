@@ -425,18 +425,14 @@ repertoire.chronos.model = function(options) {
      * Needs to be expanded to handle all proportions...?
      * 
      */
-    self.getIntervalProportion = function (startDate, subIntervalName, intervalName) {
-
-	if ( subIntervalName == 'day' && intervalName == 'month' ) {
-	    return startDate.getDate() / Date.getDaysInMonth(startDate.getFullYear(), startDate.getMonth());
-	} else if ( subIntervalName == 'month' && intervalName == 'year' ) {
-	    return (startDate.getMonth() + 1) / 12;
-	} else if ( subIntervalName == 'year' && intervalName == 'decade' ) {
-	    return (startDate.getMonth() + 1) / 12;
+    self.getIntervalInSeconds = function (startDate, eventDate) {
+	// var eventDistance = new TimePeriod(Date.parse(startDate.toString()), Date.parse(eventDate.toString()));
+	if (startDate == null || eventDate == null) {
+	    return false;
 	}
 
-	alert('NEED TO COVER THIS CONDITION! subIntervalName: ' + subIntervalName + ', intervalName: ' + intervalName);
-	return 0;
+	var eventDistance = new TimeSpan(startDate - eventDate);
+	return eventDistance.getTotalMilliseconds() / 1000;
     };
 
 
