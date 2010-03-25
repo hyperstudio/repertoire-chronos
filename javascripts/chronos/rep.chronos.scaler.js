@@ -169,14 +169,16 @@ right?
     self.initiateScalerEvents = function () {
 
 	var previousScalerTop = parseFloat(scalerElement.css("top"));
-	var currentScalerTop  = 0;
+	var currentScalerTop  = previousScalerTop;
 	var scalerPosChange   = 0;
 	var resetScalerTop    = 0;
+	var dragDirection     = null;
 
 	// Initialize for all widgets as generating tiles may have changed this from widget initialization:
 	for (name in widgets) {
 	    widgets[name].resetTopPositionRatio();
 	    widgets[name].getBottomPositionRatio();
+	    widgets[name].resize();
 	}
 
 	// Callback for stop event:
@@ -258,7 +260,7 @@ right?
 		    // Update top position for all widgets:
 		    var tmpManager = timeline.getManager();
 
-		    tmpManager.setDragChange(timeline.getProperty('wasMouseY') - timeline.getProperty('mouseY'));
+		    tmpmanager.setDragChange(timeline.getProperty('wasMouseY') - timeline.getProperty('mouseY'));
 
 		    var secondsMoved = tmpManager.getSecondsToPixels() * tmpManager.getDragChange();
 		    var pixelsToMove = 0;
@@ -281,7 +283,36 @@ right?
 		stop: function () { scalerStop( 'drag' ); }
 	    });
 
+	var topScalerDrag    = false;
+	var bottomScalerDrag = false;
 
+	$(".ui-resizable-s").mousedown(
+	    function () {
+		bottomScalerDrag = true;
+		$("#dataMonitor #scalerPosDebug span.data").html('');
+		$("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getProperty('timelineSize') + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getTop() = ' + scalerViewWidget.getTop() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getTopPositionRatio());
+	    }
+	);
+
+	$(".ui-resizable-n").mousedown(
+	    function () {
+		topScalerDrag = true;
+		$("#dataMonitor #scalerPosDebug span.data").html('');
+		$("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getProperty('timelineSize') + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getTop() = ' + scalerViewWidget.getTop() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getBottomPositionRatio());
+	    }
+	);
+
+	$(".ui-resizable-s").mouseup(
+	    function () {
+		bottomScalerDrag = false;
+	    }
+	);
+
+	$(".ui-resizable-n").mouseup(
+	    function () {
+		topScalerDrag = false;
+	    }
+	);
 
 	scalerElement.bind('resizestart',
 			  function(event, ui) {
@@ -292,6 +323,18 @@ right?
 				      + ",<br /> initial bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
 
 			      timeline.setProperty('wasMouseY', timeline.getProperty('mouseY'));
+
+			      defaults.newScalerTop  = parseFloat($("#scaler").css("top"));
+
+			      // $("#dataMonitor #scalerPosDebug span.data").html('defaults.newScalerTop = ' + defaults.newScalerTop + ', defaults.oldScalerTop = ' + defaults.oldScalerTop);
+
+			      // if (parseInt(defaults.oldScalerTop) != parseInt(defaults.newScalerTop)) {
+			      if (topScalerDrag) {
+				  dragDirection = 'top';
+			      } else if (bottomScalerDrag) {
+				  dragDirection = 'bottom';
+			      }
+
 			  });
 
 	scalerElement.bind('resize',
@@ -303,41 +346,62 @@ right?
 
 			      // Store reset scaler size so we can adjust on stop:
 			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getProperty('timelineDir')));
-			      defaults.newScalerTop  = parseFloat($("#scaler").css("top"));
 
 			      // Adjust 'innerScaler' element size to match, responsible for keeping arrows "synced:"
 			      innerScalerElement.css(timeline.getProperty('timelineDir'), defaults.newScalerSize);
 
 
-			      // First we adjust the scalerViewWidget since we need it for others:
-			      scalerViewWidget.setSecondsToPixels(
-				  timeline.getManager().getSecondsToPixels() * ( defaults.newScalerSize / timeline.getProperty('timelineSize') )
-			      );
+			      $("#dataMonitor #stpOld span.data").html('newScalerSize = ' + defaults.newScalerSize + '<br />oldScalerSize = ' + defaults.oldScalerSize + '<br />old STP: ' + scalerViewWidget.getSecondsToPixels());
 
-			      scalerViewWidget.resize();
+			      if ((defaults.newScalerSize - defaults.oldScalerSize) != 0) {
+				  $("#dataMonitor #changingStp span.data").html('true');
+				  // First we adjust the scalerViewWidget since we need it for others:
+				  scalerViewWidget.setSecondsToPixels(
+				      timeline.getManager().getSecondsToPixels() * ( defaults.newScalerSize / timeline.getProperty('timelineSize') )
+				  );
+			      } else {
+				  $("#dataMonitor #changingStp span.data").html('false');
+			      }
+
+			      $("#dataMonitor #stpNew span.data").html(scalerViewWidget.getSecondsToPixels());
+
+			      $("#dataMonitor #preResize span.data").html(
+				  "<br />current top: " + scalerViewWidget.getTop()
+				      + ",<br />current size: " + scalerViewWidget.getSize()
+				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />newTop: " + newTop
+				      // + ",<br />newTopChange: " + newTopChange,
+				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
+
+			      if ((defaults.newScalerSize - defaults.oldScalerSize) != 0) {
+				  scalerViewWidget.resize();
+			      }
+
+			      $("#dataMonitor #postResize span.data").html(
+				  "<br />current top: " + scalerViewWidget.getTop()
+				      + ",<br />current size: " + scalerViewWidget.getSize()
+				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />newTop: " + newTop
+				      // + ",<br />newTopChange: " + newTopChange,
+				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
+
 
 			      var newTop       = 0;  // for debugging more or less
 			      var newTopChange = 0;
 
 			      // Top scaler handle drag:
-			      if (parseInt(defaults.oldScalerTop) != parseInt(defaults.newScalerTop)) {
-				  // WTF IS UP WITH THIS!?
-				  // newTop = ( ( scalerViewWidget.getBottomPositionRatio() * -1 ) * scalerViewWidget.getSize() ) + ( timeline.getProperty('timelineSize') / 2 );
-
-				  /*  Mathing it up
-				  bottomPositionRatio = ( (self.getTop() - timelineSize) / self.getSize() ) * -1;
-				  bottomPositionRatio = - self.getTop() + - timelineSize / - self.getSize();
-				  bottomPositionRatio * - self.getSize() =  - self.getTop() + - timelineSize;
-				  (bottomPositionRatio * - self.getSize()) + timelineSize = - self.getTop();
-				   */
-
+			      if (dragDirection == 'top') {
 				  newTop = (scalerViewWidget.getBottomPositionRatio() * (-1 * scalerViewWidget.getSize())) + timeline.getProperty('timelineSize');
-
 				  $("#dataMonitor #dragtype span.data").html('scaler top drag!');
 			      // Bottom scaler handle drag:
-			      } else if (parseInt(scalerPosChange) != 0) {
+			      } else if (dragDirection == 'bottom') {
 				  $("#dataMonitor #dragtype span.data").html('scaler bottom drag!');
 				  newTop = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize()) * -1;
+			      }
+
+			      if (parseInt(newTop) != 0) {
+				  $("#dataMonitor #newtop span.data").html(newTop);
+				  $(scalerViewWidget.getSelector()).css('top', newTop + 'px');  // CSS CHANGE HERE
 			      }
 
 			      $("#dataMonitor #svw span.data").html(
@@ -347,11 +411,6 @@ right?
 				      + ",<br />newTop: " + newTop
 				      // + ",<br />newTopChange: " + newTopChange,
 				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
-
-			      if (parseInt(newTop) != 0) {
-				  $("#dataMonitor #newtop span.data").html(newTop);
-				  $(scalerViewWidget.getSelector()).css('top', newTop + 'px');  // CSS CHANGE HERE
-			      }
 
 			      // Makes things more complicated...
 			      // scalerViewWidget.setTop(newTopChange);
