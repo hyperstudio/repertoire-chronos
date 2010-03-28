@@ -252,6 +252,15 @@ repertoire.chronos.model = function(options) {
     };
 
 
+    var parseMethod = function (dateString) {
+	if (options.dateFormat) {
+	    return Date.parseExact(dateString, options.dateFormat);
+	} else {
+	    return Date.parse(dateString);
+	}
+    };
+
+
     /*
      * AJAX overridden method
      */
@@ -260,7 +269,7 @@ repertoire.chronos.model = function(options) {
 		   self.data.push({
 				      id:    event.id,
 				      title: event.title,
-				      start: new Date.parse(event.start)
+				      start: parseMethod(event.start)
 				  });
 	       });
 
@@ -440,23 +449,31 @@ repertoire.chronos.model = function(options) {
 
 	var eventsSelection = [];  // sub-set of events to return
 
-	var strippedStartDate = Date.parse(self.getStrippedDate(startDate, subIntervalName));
+	// var strippedStartDate = Date.parse(self.getStrippedDate(startDate, subIntervalName));
 
 	// These two lines are just a bit of wrangling to create the object literal options dynamically...
 	var add_vals = {};
 	add_vals[subIntervalName + 's'] = 0;
 
+	/*
 	if (arguments[2] != null && arguments[2] > 0) {
 	    add_vals[subIntervalName + 's'] = new Number(add_vals[subIntervalName + 's'] + arguments[2]);
 	    strippedStartDate = strippedStartDate.add(add_vals);
 	}
+	*/
 
 	add_vals[subIntervalName + 's'] = new Number(add_vals[subIntervalName + 's'] + 1);
-	var plusOneDate = strippedStartDate.clone().add(add_vals);
+	var plusOneDate = startDate.clone().add(add_vals);
 
 	for (var i = 0, j = self.data.length; i < j; i++) {
-	    if (self.data[i].start.between(strippedStartDate, plusOneDate)) {
-		// alert(strippedStartDate + ' = ' + strippedStartDate + ', plusOneDate = ' + plusOneDate);
+
+	    // THIS IS RESULTING IN THE DATE IMMEDIATELY AFTER strippedStartDate TOO
+	    // (so, for January 1984, I get the events in Feb. 1984 if they fall on the 1st)
+	    // ...what to do?  Reduce plusOneDate by one subInterval?  Hmm.
+	    if (self.data[i].start.between(startDate, plusOneDate)) {
+
+		// $("#dataMonitor #dates span.data").append('comparing, date array: ' + self.data[i].id + ': ' + self.data[i].start.toString() + ' startDate: ' + startDate.toString() + ", plusOneDate: " + plusOneDate.toString() + "<br />");
+
 		eventsSelection.push(self.data[i]);
 	    }
 	}

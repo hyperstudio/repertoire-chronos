@@ -21,7 +21,8 @@ $(window).load(
 	var dataStartYear = 1900;
 	var dataEndYear   = 2000;
 
-	var url           = "http://slebinos.mit.edu/dev/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
+	// var url           = "http://slebinos.mit.edu/dev/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
+	var url           = "http://127.0.0.1/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
 	var imgUrl        = url + "javascripts/chronos/";            // NEVER SET BY SCALER (JUST NEED GETTER)
 
 
@@ -31,7 +32,8 @@ $(window).load(
 	      params: {
 		  url: "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31'
 		  // url: "http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D" + dataStartYear + "-01-01%26e%3D" + dataEndYear + '-12-31'
-	      }
+	      },
+	      dateFormat: 'yyyy-MM-ddTHH:mm:ss-04:00' // can't figure out format specifier for '-04:00' ?
 	    }
 	);
 

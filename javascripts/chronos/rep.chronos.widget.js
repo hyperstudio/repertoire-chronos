@@ -136,7 +136,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
 
-	//$("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
+	//// $("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
 
 	// A little hack to let this function handle animation too...
 	if (arguments[1] == true) {
@@ -155,6 +155,13 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Passed in from 'holder' class
 	timelineSize = initTimelineSize;
 	timelineDir  = initTimelineDir;
+
+	// Hmm...bit of a hack to make sure that decades start with the '0' of the decade...
+	// otherwise a bunch of stuff gets messed up:
+	if (intervalName == 'decade') {
+	    topDate.setFullYear(topDate.getFullYear() - (topDate.getFullYear() % 10));
+	    // $("#dataMonitor #dates span.data").html('getting modulus for: ' + widgetSelector + ' ' + topDate.getFullYear() + ', ' + (topDate.getFullYear() - (topDate.getFullYear() % 10)) + "<br />");
+	}
 
 	/*
 	 * On loading, we need to establish a seconds -> pixel ratio.
@@ -210,7 +217,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	bottomPositionRatio = (self.getTop() + timelineSize) / self.getSize();
 
 	self.checkTiles();
-	self.loadEvents();
+	self.drawEvents();
     };
 
 
@@ -232,7 +239,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
     /* fucks everything up!? */
     self.setSecondsToPixels = function (newSecondsToPixels) {
-	$("#dataMonitor #stpSetting span.data").html( 'newSecondsToPixels = ' + newSecondsToPixels + ', oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels );
+	// $("#dataMonitor #stpSetting span.data").html( 'newSecondsToPixels = ' + newSecondsToPixels + ', oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels );
 	oldSecondsToPixels = secondsToPixels;
 	secondsToPixels    = newSecondsToPixels;
     };
@@ -317,7 +324,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 * -generate/clone tile based on heading plus count of sub-intervals.
 	 */
 
-	// Create tile/model HTML and add unique ID class so we can refer to this tile specifically: 
+	// Create tile/model HTML and add unique ID class so we can refer to this tile specifically:
 	var uniqueModelClass = intervalName + '_' + currentDate.toString('yyyy_MM_dd-HH_mm_ss');
 	var thisModelElement = $('<div />')[cloneAction]($(widgetSelector)).addClass(uniqueModelClass);
 
@@ -435,7 +442,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 		var dateClass       = $(this).attr('class').match(dateClassRegExp);
 		var thisDate        = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
 
-		// $("#dataMonitor #dates span.data").html(widgetSelector + ' ' + thisDate.toString());
+		// // $("#dataMonitor #dates span.data").html(widgetSelector + ' ' + thisDate.toString());
 
 		var newSubIntervalSize = dataModel.getSecondsInInterval(thisDate, subIntervalName) / secondsToPixels;
 
@@ -589,7 +596,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    self.loadEvents = function () {
+    self.drawEvents = function () {
 	
 	/*
 	 * Iterate through events.
@@ -616,23 +623,28 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
 
 	// This regexp is used to match on the class we generate from the date to place in tiles.
+	//var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})");
 	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1})");
 
 	// Initialize
 	var lastEventStartDate = Date.today();
 
-	$("#dataMonitor #dates span.data").append("diff between dates one day apart in seconds: " + dataModel.getIntervalInSeconds(lastEventStartDate, lastEventStartDate.clone().add({ days: 1 })) + "<br /><br />");
+	// // $("#dataMonitor #dates span.data").append("diff between dates one day apart in seconds: " + dataModel.getIntervalInSeconds(lastEventStartDate, lastEventStartDate.clone().add({ days: 1 })) + "<br /><br />");
 
 	$(widgetSelector).find("." + intervalName + "Model").children().each(
 	    function (index, element) {
-
 		$(this).find("li").each(
 		    function(index, element) {
-
-			// $("#dataMonitor #dates span.data").append("appending found classes: " + $(element).attr('class') + "<br /><br />");
-
+			// $("#dataMonitor #dates span.data").append("appending found classes: " + $(element).attr('class') + "<br />");
 			var dateClass     = $(element).attr('class').match(dateClassRegExp);
+
 			var eventStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+			var addIntervalSpec = {};
+			addIntervalSpec[subIntervalName + 's'] = dateClass[7];
+			eventStartDate.add(addIntervalSpec);
+
+
+			// $("#dataMonitor #dates span.data").append('after adding inc: ' + widgetSelector + " : " + eventStartDate.toString() + "<br />");
 
 			/*
 			 * We loop too much if we don't cut things off...not sure why yet.
@@ -642,41 +654,27 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    return true;
 			}
 
-			$("#dataMonitor #dates span.data").append("<ul>");
+			// $("#dataMonitor #dates span.data").append("<ul>");
 
-			var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName, dateClass[7]);
+			var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName);
 
 			var parentHeight           = $(element).height();
-			var previousTopPosition    = 0;  // Little hacky thing for getting topPositioning right
-			var previousTopPositionAdd = 0;  // Little hacky thing for getting topPositioning right
-
 
 			for (var i = 0, j = events.length; i < j; i++) {
 
 			    var topPosition = (dataModel.getIntervalInSeconds(eventStartDate, events[i].start) / secondsToPixels) + parentHeight;
 
 			    // Debugging
+			    /*
 			    $("#dataMonitor #dates span.data").append(
-				"<li>" + events[i].start.toString() + ", "
+				"<li>" + events[i].id + ': ' + events[i].start.toString() + ", "
 				    + dataModel.getIntervalInSeconds(eventStartDate, events[i].start) + " ... "
 				    + topPosition + "</li>"
 			    );
-
-			    /*
-			     if (previousTopPosition == topPosition) {
-			     previousTopPosition = topPosition;
-			     previousTopPositionAdd += 2;
-			     topPosition = previousTopPositionAdd + topPosition;
-			     } else {
-			     previousTopPosition = topPosition;
-			     previousTopPositionAdd = 0;
-			     }
-			     */
+			    */
 
 			    if (eventViewType == 'icon') {
-
 				var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;  // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
-
 				var leftPosition = 0;
 				leftPosition = wasPosCount * iconWidth; // how far to indent?  GLOBAL
 
@@ -697,17 +695,18 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    }
 				}
 
+				var class_regex = / /g;
+
 				$(element).append(
 				    "<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-					+ " class='eDot " + dotSize + "'"
+				    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
 					+ " id='event-" + events[i].id + "'"
 					+ " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-					+ " margin-top:-10px; top:" + topPosition + "px;' title=''"
+					+ " margin-top:-10px; bottom:" + topPosition + "px;' title=''"
 					+ " alt='" + $(element).attr('class') + "'/>"
 				);
 
 			    } else if (eventViewType == 'density') {
-				/*
 				 $(element).append(
 				 "<img src='javascripts/chronos/img/event-density.png'"
 				 + " class='eDensity'"
@@ -715,12 +714,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				 + " style='position:absolute; z-index:3; width:100%; left:0;"
 				 + " margin-top:-20px; top:" + topPosition + "'px;' />"
 				 );
-				 */
 			    }
 			    
 			}
 
-			$("#dataMonitor #dates span.data").append("</ul>");
+			// $("#dataMonitor #dates span.data").append("</ul><br /><br />");
 			lastEventStartDate = eventStartDate;
 
 			return true;
