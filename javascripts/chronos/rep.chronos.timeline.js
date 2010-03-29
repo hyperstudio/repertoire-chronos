@@ -175,7 +175,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							      intervalName:        'decade',
 							      subIntervalName:     'year',
 							      isManager:           true,
-						              intervalsVisible:    .25,
+						              intervalsVisible:    .5,
 							      eventViewType:       'density'
 							  }, dataModel);
 
@@ -186,13 +186,14 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							    intervalName:        'year',
 							    subIntervalName:     'month',
 							    isManager:           false,
-						            intervalsVisible:    .5,
+						            intervalsVisible:    1,
 							    eventViewType:       'icon'
 							}, dataModel);
+
 /*
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
 							     startDate:           defaults.startDate,
-							     volumePercentage:    '30',
+							     volumePercentage:    '10',
 							     widgetSelector:      '#timelineMonths',
 							     intervalName:        'month',
 							     subIntervalName:     'day',

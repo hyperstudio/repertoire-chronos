@@ -440,7 +440,7 @@ repertoire.chronos.model = function(options) {
 	    return false;
 	}
 
-	var eventDistance = new TimeSpan(startDate - eventDate);
+	var eventDistance = new TimeSpan(eventDate - startDate);
 	return eventDistance.getTotalMilliseconds() / 1000;
     };
 

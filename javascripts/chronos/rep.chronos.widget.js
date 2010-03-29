@@ -325,7 +325,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	// Create tile/model HTML and add unique ID class so we can refer to this tile specifically:
-	var uniqueModelClass = intervalName + '_' + currentDate.toString('yyyy_MM_dd-HH_mm_ss');
+	var uniqueModelClass = generateModelClass(currentDate);
 	var thisModelElement = $('<div />')[cloneAction]($(widgetSelector)).addClass(uniqueModelClass);
 
 	// Add more generic classes for general CSS manipulation:
@@ -468,11 +468,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 		// FIX
 		// Now, re-draw events.  First remove old events:
-		$('div').find('img.eDot').remove()
-		$('div').find('img.eDensity').remove();
+		//$('div').find('img.eDot').remove()
+		//$('div').find('img.eDensity').remove();
 
 		// Re-draw events for this tile:
-		self.drawEvents(thisDate);
+		//self.drawEvents(thisDate);
 	});
 
 	return true;
@@ -619,78 +619,82 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// Where does this belong?  This should be part of the "visual event" 
 	// (that is, view class that corresponds to individual datetime event model) class, and also be configurable.
-	var iconWidth   = 10;
+	var iconWidth   = 20;
 	var switchDir   = false;
 
 	var widgetWidth = $(widgetSelector).width();
 	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
 
 	// This regexp is used to match on the class we generate from the date to place in tiles.
-	//var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})");
-	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1})");
+	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1,2})");
 
-	// Initialize
-	var lastEventStartDate = Date.today();
+	//$("#dataMonitor #dates span.data").html('');
+	$("#dataMonitor #dates span.data").append("<br />");
 
-	// // $("#dataMonitor #dates span.data").append("diff between dates one day apart in seconds: " + dataModel.getIntervalInSeconds(lastEventStartDate, lastEventStartDate.clone().add({ days: 1 })) + "<br /><br />");
+	// The matched tiles
+	var tileResultSet = {};
 
-	$(widgetSelector).find("." + intervalName + "Model").children().each(
+	if (dateFilter) {
+	    tileResultSet = $(widgetSelector).find("div." + generateModelClass(dateFilter)).children();
+	    $("#dataMonitor #dates span.data").append('size: ' + tileResultSet.size() + '<br />');
+	} else {
+	    tileResultSet = $(widgetSelector).find("." + intervalName + "Model").children();
+	}
+
+	// Find all the 'model' divs, which specify individual tiles (i.e. corresponds to one instance of 'intervalName', whatever it is):
+	tileResultSet.each(
 	    function (index, element) {
+
+		// Within the tile, find each instance of the sub-interval (subIntervalName).
 		$(this).find("li").each(
-		    function(index, element) {
-			// $("#dataMonitor #dates span.data").append("appending found classes: " + $(element).attr('class') + "<br />");
+		    function (index, element) {
+			// Extract the date that this subInterval begins with.
 			var dateClass     = $(element).attr('class').match(dateClassRegExp);
 
-			var eventStartDate = '';
+			var tileStartDate = '';
 
 			if (dateFilter != null) {
-			    eventStartDate = dateFilter;
+			    tileStartDate = dateFilter;
 			} else {
-			    eventStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+			    tileStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
 			}
 
 			var addIntervalSpec = {};
 			addIntervalSpec[subIntervalName + 's'] = dateClass[7];
-			eventStartDate.add(addIntervalSpec);
+			tileStartDate.add(addIntervalSpec);
 
-			if (dateFilter != null) {
-			    $("#dataMonitor #dates span.data").append($(element).attr('class') + ', dateFilter: ' + dateFilter + ', eventStartDate ' + eventStartDate + "<br />");
-			    return true;
-			}
+			$("#dataMonitor #dates span.data").append("Start date for this tile: " + tileStartDate.toString() + ", interval spec: " + addIntervalSpec[subIntervalName + 's'] + "<br />");
 
-			// $("#dataMonitor #dates span.data").append('after adding inc: ' + widgetSelector + " : " + eventStartDate.toString() + "<br />");
+			var events = dataModel.getEventsInInterval(tileStartDate, subIntervalName);
 
-			/*
-			 * We loop too much if we don't cut things off...not sure why yet.
-			 */
-			if (Date.equals(eventStartDate, lastEventStartDate)) {
-			    //$("#dataMonitor #dates span.data").append(widgetSelector + ": again? " + eventStartDate.toString() + "<br />");
-			    //return true;
-			}
+			$("#dataMonitor #dates span.data").append("events result length: " + events.length);
 
-			// $("#dataMonitor #dates span.data").append("<ul>");
 
-			var events = dataModel.getEventsInInterval(eventStartDate, subIntervalName);
+			var parentHeight = $(element).height();
 
-			var parentHeight           = $(element).height();
+			$("#dataMonitor #dates span.data").append("<ul>");
 
 			for (var i = 0, j = events.length; i < j; i++) {
 
-			    var topPosition = (dataModel.getIntervalInSeconds(eventStartDate, events[i].start) / secondsToPixels) + parentHeight;
+			    var topPosition = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
+
+			    var topPosPercentage = (topPosition / parentHeight) * 100;
 
 			    // Debugging
-			    /*
+
 			    $("#dataMonitor #dates span.data").append(
 				"<li>" + events[i].id + ': ' + events[i].start.toString() + ", "
-				    + dataModel.getIntervalInSeconds(eventStartDate, events[i].start) + " ... "
+				    + dataModel.getIntervalInSeconds(tileStartDate, events[i].start) + " ... "
 				    + topPosition + "</li>"
 			    );
-			    */
 
 			    if (eventViewType == 'icon') {
-				var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;  // TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
+				// TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
+				var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
+				// var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;
+
 				var leftPosition = 0;
-				leftPosition = wasPosCount * iconWidth; // how far to indent?  GLOBAL
+				leftPosition = (wasPosCount * iconWidth) - iconWidth; // how far to indent?
 
 				// If we're stacking to right
 				if (switchDir == false){
@@ -704,7 +708,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    wasPosCount -= 1; // Continue stacking
 
 				    // But check the next stack
-				    if ((wasPosCount) * iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
+				    if ( ((wasPosCount) * iconWidth) - iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
 					switchDir = false; // And switch dirs if it overflows
 				    }
 				}
@@ -716,30 +720,40 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
 					+ " id='event-" + events[i].id + "'"
 					+ " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-					+ " margin-top:-10px; bottom:" + topPosition + "px;' title=''"
+					+ " margin-top: -10px; top: " + topPosPercentage + "%' title='" + events[i].title + "'"
+					+ " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
 					+ " alt='" + $(element).attr('class') + "'/>"
 				);
-
 			    } else if (eventViewType == 'density') {
-				 $(element).append(
-				 "<img src='javascripts/chronos/img/event-density.png'"
-				 + " class='eDensity'"
-				 + " id='density-" + (events[i].id) + "'"
-				 + " style='position:absolute; z-index:3; width:100%; left:0;"
-				 + " margin-top:-20px; top:" + topPosition + "'px;' />"
-				 );
+				$(element).append(
+				    "<img src='javascripts/chronos/img/event-density.png'"
+					+ " class='eDensity'"
+					+ " id='density-" + (events[i].id) + "'"
+					+ " style='position:absolute; z-index:3; width:100%; left:0;"
+					+ " margin-top:-20px; top:" + topPosPercentage + "%;' />"
+				);
 			    }
-			    
 			}
 
-			// $("#dataMonitor #dates span.data").append("</ul><br /><br />");
-			lastEventStartDate = eventStartDate;
+			$("#dataMonitor #dates span.data").append("</ul><br /><br />");
 
-			return true;
+			return true;  // ENDS 'li' loop anonymous function
 		    }
 		);
 	    }
 	);
+
+	$("#dataMonitor #dates span.data").append("<br />");
+    };
+
+
+    // PRIVATE
+
+    /*
+     * Utility function to generate consistent naming for model class:
+     */
+    var generateModelClass = function (date) {
+	return intervalName + '_' + date.toString('yyyy_MM_dd-HH_mm_ss');
     };
 
 
