@@ -178,7 +178,7 @@ right?
 	for (name in widgets) {
 	    widgets[name].resetTopPositionRatio();
 	    widgets[name].getBottomPositionRatio();
-	    widgets[name].resize();
+	    // widgets[name].resize();
 	}
 
 	// Callback for stop event:

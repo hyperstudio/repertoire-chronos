@@ -186,7 +186,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							    intervalName:        'year',
 							    subIntervalName:     'month',
 							    isManager:           false,
-						            intervalsVisible:    .25,
+						            intervalsVisible:    .5,
 							    eventViewType:       'icon'
 							}, dataModel);
 /*

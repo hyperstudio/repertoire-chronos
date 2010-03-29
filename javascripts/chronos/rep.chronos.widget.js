@@ -464,15 +464,20 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 		// USING THIS!?
 		// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
 		// thisSubIntervalContainerElement.addClass(subIntervalHeightRemainder.toString());
+
+
+		// FIX
+		// Now, re-draw events.  First remove old events:
+		$('div').find('img.eDot').remove()
+		$('div').find('img.eDensity').remove();
+
+		// Re-draw events for this tile:
+		self.drawEvents(thisDate);
 	});
 
 	return true;
     };
 
-
-    self.adjustTop = function () {
-	return false;
-    };
 
 
     /*
@@ -558,7 +563,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	}
 
 	var testInc = 0;
-	var testIncTest = 2;
+	var testIncTest = 4;
 
 	while (upTest() && testInc < testIncTest) {
 	    checkTop += self.tile('up');
@@ -580,8 +585,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var testInc = 0;
 
 	while (downTest() && testInc < testIncTest) {
-	    //self.tile('down');
-
 	    checkHeight += self.tile('down');
 
 	    if (!isManager) {
@@ -596,7 +599,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    self.drawEvents = function () {
+    self.drawEvents = function (dateFilter) {
 	
 	/*
 	 * Iterate through events.
@@ -638,11 +641,22 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			// $("#dataMonitor #dates span.data").append("appending found classes: " + $(element).attr('class') + "<br />");
 			var dateClass     = $(element).attr('class').match(dateClassRegExp);
 
-			var eventStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+			var eventStartDate = '';
+
+			if (dateFilter != null) {
+			    eventStartDate = dateFilter;
+			} else {
+			    eventStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+			}
+
 			var addIntervalSpec = {};
 			addIntervalSpec[subIntervalName + 's'] = dateClass[7];
 			eventStartDate.add(addIntervalSpec);
 
+			if (dateFilter != null) {
+			    $("#dataMonitor #dates span.data").append($(element).attr('class') + ', dateFilter: ' + dateFilter + ', eventStartDate ' + eventStartDate + "<br />");
+			    return true;
+			}
 
 			// $("#dataMonitor #dates span.data").append('after adding inc: ' + widgetSelector + " : " + eventStartDate.toString() + "<br />");
 
@@ -650,8 +664,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			 * We loop too much if we don't cut things off...not sure why yet.
 			 */
 			if (Date.equals(eventStartDate, lastEventStartDate)) {
-			    // $("#dataMonitor #dates span.data").append(widgetSelector + ": again? " + eventStartDate.toString() + "<br />");
-			    return true;
+			    //$("#dataMonitor #dates span.data").append(widgetSelector + ": again? " + eventStartDate.toString() + "<br />");
+			    //return true;
 			}
 
 			// $("#dataMonitor #dates span.data").append("<ul>");
