@@ -90,7 +90,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	// Scaler Size and Placement
 	scalerElement.css(timeline.getProperty('timelineDir'), ( defaults.scalerSize + 'px'));       // Height
 	scalerElement.css(timeline.getProperty('perp'), defaults.scalerWidth);                         // Width
-	scalerElement.css(defaults.orientation, defaults.newScalerTop);                                // Top
+	scalerElement.css(defaults.orientation, ( defaults.newScalerTop + 'px'));                                // Top
 	innerScalerElement.css(timeline.getProperty('timelineDir'), (defaults.scalerSize + 'px'));   // Height of innerScaler (copies scaler's height)
 
 	// Set CorejQuery UI Resizability
@@ -296,7 +296,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getProperty('timelineDir')));
 
 			      // Adjust 'innerScaler' element size to match, responsible for keeping arrows "synced:"
-			      innerScalerElement.css(timeline.getProperty('timelineDir'), defaults.newScalerSize);
+			      innerScalerElement.css(timeline.getProperty('timelineDir'), (defaults.newScalerSize + 'px'));
 
 
 			      $("#dataMonitor #stpOld span.data").html('newScalerSize = ' + defaults.newScalerSize + '<br />oldScalerSize = ' + defaults.oldScalerSize + '<br />old STP: ' + scalerViewWidget.getSecondsToPixels());

@@ -120,7 +120,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
     self.getSize = function () {
-	return parseFloat($(widgetSelector).css('height'));
+	return parseFloat($(widgetSelector).height());
     };
 
     self.getTop = function () {
@@ -129,9 +129,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
     self.setTop = function (topChange) {
 	var checkTop = parseFloat($(widgetSelector).css('top'));
-
 	var adjustedTopChange = topChange + topSetValueRemainder;
-	var adjustedTopChangeNoDecimal = parseInt(adjustedTopChange);
+	var adjustedTopChangeNoDecimal = adjustedTopChange;
 	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
 
 	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
@@ -210,7 +209,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	widgetOffset = Math.ceil(timelineSize / 2 + (dataModel.getSubIntervalDiff(startDate, subIntervalName) / secondsToPixels));
-	$(widgetSelector).css('top', widgetOffset);     // CSS CHANGE HERE
+	$(widgetSelector).css('top', (widgetOffset + 'px'));     // CSS CHANGE HERE
 
 	// Needed for scaling:
 	topPositionRatio    = self.getTop() / self.getSize();
@@ -366,7 +365,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    subIntervalHeightRemainder = subIntervalHeightRemainder - parseInt(subIntervalHeightRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
 
 	    // NOW, we can set the height of sub-interval element:
-	    subIntervalElement.css(timelineDir, thisSubIntervalHeight);
+	    subIntervalElement.css(timelineDir, (thisSubIntervalHeight + 'px'));
 	}
 
 	// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
@@ -401,26 +400,26 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Adjust top if we are going up ?
 	// parseFloat is just used to chop off 'px' ?
 	//alert(widgetSelector + ' top = ' + $(widgetSelector).css('top'));
-	//alert(thisSubIntervalContainerElement.css('height'));
-	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.css('height')) + 'px');
-	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.css('height')) + 'px');
+	//alert(thisSubIntervalContainerElement.height());
+	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px');
+	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px');
 
 
 	// HERE WE SET THE TOP POSITION OF THIS WIDGET/COLUMN
 	if (tileDir == 'up') {
-	    $(widgetSelector).css('top', ( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.css('height')) + 'px'));
+	    $(widgetSelector).css('top', ( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px'));
 	}
 
 	// OLD CODE FOR THIS
 
 	// Can we do this all at once along with updating positioning at the end of this function?
 	// Splitting it up like this right now follows the old tiling method...
-	// $(selector).css('top', (-1 * (thisSubIntervalContainerElement.css('height')) + 'px'));  // CSS CHANGE HERE
+	// $(selector).css('top', (-1 * (thisSubIntervalContainerElement.height()) + 'px'));  // CSS CHANGE HERE
 
-	// alert(dataModel.getSubDate(currentDate, intervalName) + ': ' + thisSubIntervalContainerElement.css('height'));
+	// alert(dataModel.getSubDate(currentDate, intervalName) + ': ' + thisSubIntervalContainerElement.height());
 
 	// Return height of the tile generated.  Should return something else?
-	return (parseInt(thisSubIntervalContainerElement.css('height')));
+	return (parseInt(thisSubIntervalContainerElement.height()));
     };
 
 
@@ -457,7 +456,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			subIntervalHeightRemainder = subIntervalHeightRemainder - parseInt(subIntervalHeightRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
 
 			// NOW, we can set the height of sub-interval element:
-			$(this).css(timelineDir, thisSubIntervalHeight);
+			$(this).css(timelineDir, (thisSubIntervalHeight + 'px'));
 		    }
 		);
 
@@ -527,7 +526,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	var checkTop    = parseFloat($(widgetSelector).css('top')) * -1;    // top offset of widget, negated
-	var checkHeight = parseFloat($(widgetSelector).css('height'));      // height of widget
+	var checkHeight = parseFloat($(widgetSelector).height());      // height of widget
 
 	var tileFactor  = 0;                                      // Only used when tiling 'non-manager' column, represents how many tiles we need in proportion to 'manager' column
 	var upTest, downTest;                                     // Hold functions which return boolean values based on positioning/height tests
@@ -578,7 +577,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// This happens afterwards 'cause we may have changed the non-manager columns?
 	if (!isManager) {
-	    checkHeight = parseFloat($(widgetSelector).css('height'));   // height of entire column
+	    checkHeight = parseFloat($(widgetSelector).height());   // height of entire column
 	    checkTop = (widgetOffset * -1); // top offset of Timeline
 	}
 
@@ -670,7 +669,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			$("#dataMonitor #dates span.data").append("events result length: " + events.length);
 
 
-			var parentHeight = $(element).height();
+			var parentHeight = parseInt($(element).height());
 
 			$("#dataMonitor #dates span.data").append("<ul>");
 
