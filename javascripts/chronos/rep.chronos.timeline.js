@@ -65,6 +65,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     /* END CARRIED OVER VARS */
 
+	/* If IE, we need to be capable of delivering different styles */
+	if ( $.browser.msie ) {
+	  $("#timelineContainer").addClass("ie");
+	}
 
     // TO PLACE EVENTS, MUST RECORD WHICH YEARS/TILES HAVE BEEN PLACED:
     var recordTiles = {
@@ -86,6 +90,18 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	    return false;
 	}
     };
+
+	// IE doesn't like indexOf (above), so create it ...
+	if(!Array.indexOf){
+	  Array.prototype.indexOf = function(obj){
+	   for(var i=0; i<this.length; i++){
+		if(this[i]==obj){
+		 return i;
+		}
+	   }
+	   return -1;
+	  }
+	}
 
     self.setProperty = function (propertyName, propertyValue) {
 	validProperties = [ 'smallUnitSize', 'bigUnitSize', 'smallTileSize', 'smallTileOffset', 'bigTileOffset', 'bigTileTop', 'sizeRatio', 'correlateYears', 'correlateDecades', 'wasMouseY' ];
@@ -288,6 +304,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		}
 
 		defaults.wasMouseY = defaults.mouseY;  // Memory for mouse position
+		
 	    };
 
 	    widgetStopFunctions[name] = function (event, ui) {
@@ -361,14 +378,14 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     };
 
 
+
     self.mousePrePos = function () {
-	$().mousemove(
+	$(document).mousemove(
 	    function (e) {
 		defaults.mouseX = e.pageX;
 		defaults.mouseY = e.pageY;
 	    });
     };
-
 
     /*
      * Helper function for use with events:
