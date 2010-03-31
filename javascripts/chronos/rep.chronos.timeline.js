@@ -65,10 +65,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     /* END CARRIED OVER VARS */
 
-	/* If IE, we need to be capable of delivering different styles */
-	if ( $.browser.msie ) {
-	  $("#timelineContainer").addClass("ie");
-	}
 
     // TO PLACE EVENTS, MUST RECORD WHICH YEARS/TILES HAVE BEEN PLACED:
     var recordTiles = {
@@ -91,17 +87,17 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	}
     };
 
-	// IE doesn't like indexOf (above), so create it ...
-	if(!Array.indexOf){
-	  Array.prototype.indexOf = function(obj){
-	   for(var i=0; i<this.length; i++){
+    // IE doesn't like indexOf (above), so create it ...
+    if (!Array.indexOf) {
+	Array.prototype.indexOf = function(obj){
+	    for(var i=0; i<this.length; i++){
 		if(this[i]==obj){
-		 return i;
+		    return i;
 		}
-	   }
-	   return -1;
-	  }
-	}
+	    }
+	    return -1;
+	};
+    }
 
     self.setProperty = function (propertyName, propertyValue) {
 	validProperties = [ 'smallUnitSize', 'bigUnitSize', 'smallTileSize', 'smallTileOffset', 'bigTileOffset', 'bigTileTop', 'sizeRatio', 'correlateYears', 'correlateDecades', 'wasMouseY' ];
@@ -157,29 +153,29 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     // See Private Defaults
     self.initialize = function() {
 
-	/*****************************************************************************
-	 * INITIALIZE NECESSARY VARIABLES
-	 */
+	// We used to start with mainSelector like this, but then when moving it to a jQuery plugin,
+	// we have to add this because of all the code that assumes its existence.  CLEAN UP.
+	mainSelector = "#" + mainSelector;
+
 
 	// CHANGED FROM PARSEDFLOAT TO PARSEINT
 	defaults.timelineSize    = parseInt($(mainSelector).css(defaults.timelineDir));  // Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
-	//alert('JQUERY .css FUNCTION GIVES US:' + $(mainSelector).css(defaults.timelineDir));
 
-	// Just for SCALER
+	// Just for scaler
 	defaults.bigTileTop      = defaults.bigTileOffset;
 
 	// ...for pulling icons in and whatnot:
-        defaults.imgUrl          = defaults.url + "javascripts/chronos/",
+        defaults.imgUrl          = defaults.url + "javascripts/chronos/";
 
 
-	/*****************************************************************************
-	 * START BUILDING TIMELINE
-	 */
+	// START BUILDING TIMELINE
+
 
 	// FIX TEXT SELECTION BUG IN IE
 	document.getElementById(
 	    mainSelector.replace(/^#(.*)$/, "$1")       // Strip hash from beginning of selector
 	).onselectstart = function() { return false; };
+
 
 	// Associates mouse events with global variables...needed?
 	self.mousePrePos();
@@ -219,15 +215,11 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							 }, dataModel);
 */
 
-	/*
-	 * First we have to figure out the 'manager' secondsToPixels value.
-	 * Then we set it for each of the other columns.
-	 * 
-	 * The way this works is officially retarded.  Fix.
-	 * Probably, the manager idea shouldn't be known at all by the sub-columns...but how to
-	 * implement checkTiles if so?
-	 * 
-	 */
+
+	 // First we have to figure out the 'manager' secondsToPixels value.
+	 // Then we set it for each of the other columns.
+	 // Probably, the manager idea shouldn't be known at all by the sub-columns...but how to
+	 // implement checkTiles if so?
 
 	var managerStP = 0;
 

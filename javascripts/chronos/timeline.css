@@ -15,10 +15,10 @@ html, body, li, ul {margin:0; padding:0;}
 
 ul, ol, li {list-style:none;}
 
-#timelineContainer, li .marker, #timelineDecades img {-moz-user-select: none; -khtml-user-select: none; user-select:none; cursor:pointer; cursor:hand;}
+#chronos, li .marker, #timelineDecades img {-moz-user-select: none; -khtml-user-select: none; user-select:none; cursor:pointer; cursor:hand;}
 
 /* Adjust the width and color of the timeline however you'd like */
-#timelineContainer {z-index:10000000; position:relative; width:300px; height:100%; overflow:hidden; border:1px solid #9CC7F0; border-top:none; border-bottom:none;}
+#chronos {z-index:10000000; position:relative; width:300px; height:100%; overflow:hidden; border:1px solid #9CC7F0; border-top:none; border-bottom:none;}
 
 /* Added by DD to make things more abstracted... */
 div.tWidget { float:left; background-color:#EFFCFF; }
@@ -56,10 +56,10 @@ li .start {} /* Styling for the first marker of each tile, ie " font-weight:bold
 body {font-family:Arial, Helvetica, sans-serif; body:10px;}
 html, body {height:100%} /* 100% height is only required if you want timeline to be 100% (browser quirks) */
 
-/* #timelineContainer {height: 500px; float:left;} /* 100% timeline is a choice, you may change it */
-#timelineContainer {height:height:100%; float:left;} /* 100% timeline is a choice, you may change it */
+/* #chronos {height: 500px; float:left;} /* 100% timeline is a choice, you may change it */
+#chronos {height:height:100%; float:left;} /* 100% timeline is a choice, you may change it */
 
-/* #timelineContainer {height: 600px; border: 1px solid black; float:left;} /* 100% timeline is a choice, you may change it */
+/* #chronos {height: 600px; border: 1px solid black; float:left;} /* 100% timeline is a choice, you may change it */
 
 .clear {clear:both;}
 

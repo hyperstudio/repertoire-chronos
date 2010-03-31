@@ -15,6 +15,12 @@ repertoire.chronos.model = function(options) {
     // default: no options specified
     options = options || {};
 
+    // Defaults; can be overridden to handle other JSON formats
+    options['data_start'] = options['data_start'] || 'events';
+    options['id_name']    = options['id_name']    || 'id';
+    options['title_name'] = options['title_name'] || 'title';
+    options['date_name']  = options['date_name']  ||'start';
+
 
     // PRIVATE
 
@@ -42,6 +48,8 @@ repertoire.chronos.model = function(options) {
     var currentYear  = 2010;
     var currentMonth = Date.today().getMonth();
 
+    // little hack to make sure we are parsing google spreadsheets
+    var gs_flag = false;
 
     /*
      *  Kinda dumb wrapper function for Date.parse()...I want to keep all the date stuff in one place though, 
@@ -261,15 +269,43 @@ repertoire.chronos.model = function(options) {
     };
 
 
+    var nextLevel = function (deepObject, propertyString) {
+	var splitString = propertyString.match(/^([A-Za-z\$0-9-]*)\.(.*)$/);  // What exactly is the full set of acceptable characters within JSON naming conventions/protocol?  Same as JS...
+
+	// I really hate this.  Why doesn't google spreadsheet JSON come formatted as fucking JSON!!??!??  What's the point???
+	if (splitString == null) {
+	    if (gs_flag && propertyString != 'entry' && propertyString != '$t') {
+		var splitGSData = deepObject.split(',');
+		var splitGSDataFinal = {};
+		for (var i = 0; i < splitGSData.length; i++) {
+		    var splitGSDataField = splitGSData[i].match(/^([^:]*):(.*)$/);
+		    if (splitGSDataField != null && splitGSDataField[1].match(propertyString)) {
+			return splitGSDataField[2];
+		    }
+		}
+	    } else {
+		return deepObject[propertyString];
+	    }
+	} else {
+	    return nextLevel(deepObject[splitString[1]], splitString[2]);
+	}
+
+	return false;  // should never get here.
+    };
+
+
     /*
      * AJAX overridden method
      */
     var callback = function (data) {
-	$.each(data.events, function (i, event) {
+
+	var real_data = nextLevel(data, options.data_start);
+
+	$.each(real_data, function (i, event) {
 		   self.data.push({
-				      id:    event.id,
-				      title: event.title,
-				      start: parseMethod(event.start)
+				      id:    nextLevel(event, options.id_name),
+				      title: nextLevel(event, options.title_name),
+				      start: parseMethod(nextLevel(event, options.date_name))
 				  });
 	       });
 
@@ -307,7 +343,7 @@ repertoire.chronos.model = function(options) {
 
     self.update = function() {
 	// var url = self.default_url(['projects', 'results']);
-        self.fetch(options['params'], options['url'], 'json', callback);
+        self.fetch(options['params'], options['url'], 'json', callback, $('#debug'));
     };
 
     self.initialize = function() {
@@ -322,6 +358,10 @@ repertoire.chronos.model = function(options) {
 	dateTimeConstants.decade      =      getSecondsInDecade;
 	dateTimeConstants.century     =      getSecondsInCentury;
 	dateTimeConstants.millenium   =      getSecondsInMillenium;
+
+	if (options.params.url.search('^http://spreadsheets.google.com') != -1) {
+	    gs_flag = true;
+	}
 
 	self.update();
     };
