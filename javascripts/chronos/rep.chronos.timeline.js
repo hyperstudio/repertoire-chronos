@@ -21,133 +21,26 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     var widgets       = {};  // Widgets inside timeline.
     var managerWidget = null;  // Store this so we don't have to keep looping through widgets collection
 
-
-    /* CARRIED OVER VARS */
-
+    // DEFAULTS
     var defaults = {
 	startDate:        'Jan 01, 1984 00:00:00',
-
 	timelineDir:      'height',                        // What direction should this timeline be (options: height or width):
 	timelineSize:     null,                            // -NEEDS INITIALIZATION
 	tileOffset:       -2,                              // How many tiles back do we pull? (to precache upward)
 
-	// Applies to DECADES ('controller') column
-	bigUnitSize:      200,                             // How many pixels in a Y? (ie, Year)
-	bigTileSize:      null,                            // Calculate big tile size  -NEEDS INITIALIZATION
-	bigTileOffset:    null,                            // -NEEDS INITIALIZATION
-	bigUnitBase:      10,                              // How many bigUnitSize's are in a tile? (ie. 10 years in a decade)  // DATE CLASS RESPONSIBILITY
-
-	// Applies to YEARS column
-	smallUnitSize:    100,                             // How many pixels in a X? (ie, Month)
-	smallTileSize:    null,                            // Calculate small tile size  -NEEDS INITIALIZATION
-	smallTileOffset:  null,                            // -NEEDS INITIALIZATION
-	smallUnitBase:    12,                              // How many smallUnitSize's are in a tile? (ie. 12 months in a year) // DATE CLASS RESPONSIBILITY
-
 	// THESE FOR (UI) EVENTS (initiateTileEvents)
-	sizeRatio:        null,                            // What is the size ratio (needed for calculating corresponding movement)  -NEEDS INITIALIZATION
-	correlateYears:   0,
-	correlateDecades: 0,
 	mouseY:           0,
 	mouseX:           0,
 	wasMouseY:        0,
-	wasMouseY2:       0,
 
-	// SCALER
-	bigTileTop:       null,                            // a variable used for scaler manipulation, more or less same as above  -NEEDS INITIALIZATION
-
-	// FOR placeEvents():
-	url:              "http://slebinos.mit.edu/dev/js-play/",
-	imgUrl:           null,                            // -NEEDS INITIALIZATION
-	perp:             'width',                         // What is the perpendicular?             // FOR SCALER/EVENTS
-	iconWidth:        20,                              // FOR EVENTS ONLY
-	yearWidth:        null                             // FOR EVENTS ONLY -NEEDS INITIALIZATION
-    };
-
-    /* END CARRIED OVER VARS */
-
-
-    // TO PLACE EVENTS, MUST RECORD WHICH YEARS/TILES HAVE BEEN PLACED:
-    var recordTiles = {
-	decadeTiles: [],
-	yearTiles:   []
+	// Used by Scaler:
+	perp:             'width'                          // What is the perpendicular?
     };
 
 
     // PUBLIC
 
-    // What is the right way to do these getters/setters?
-    //  'cause this isn't it...DD
-    self.getProperty = function (propertyName) {
-	validProperties = [ 'url', 'imgUrl', 'perp', 'tileOffset', 'timelineDir',  'timelineSize', 'smallUnitBase', 'mouseY', 'smallUnitSize', 'bigUnitSize', 'smallTileSize', 'smallTileOffset', 'bigTileOffset', 'bigTileTop', 'sizeRatio', 'correlateYears', 'correlateDecades', 'wasMouseY' ];
-
-	if (validProperties.indexOf(propertyName)) {
-	    return defaults[propertyName];
-	} else {
-	    return false;
-	}
-    };
-
-    // IE doesn't like indexOf (above), so create it ...
-    if (!Array.indexOf) {
-	Array.prototype.indexOf = function(obj){
-	    for(var i=0; i<this.length; i++){
-		if(this[i]==obj){
-		    return i;
-		}
-	    }
-	    return -1;
-	};
-    }
-
-    self.setProperty = function (propertyName, propertyValue) {
-	validProperties = [ 'smallUnitSize', 'bigUnitSize', 'smallTileSize', 'smallTileOffset', 'bigTileOffset', 'bigTileTop', 'sizeRatio', 'correlateYears', 'correlateDecades', 'wasMouseY' ];
-
-	if (validProperties.indexOf(propertyName)) {
-	    defaults[propertyName] = propertyValue;
-	    return true;
-	} else {
-	    return false;
-	}
-    };
-
-
-    /* ADDED WHEN RE-BUILDING SCALER -DD, 03/02/10 */
-
-    self.getSelector = function () {
-	return mainSelector;
-    };
-
-    self.getManager = function () {
-	// If we've already looped through and found this, just return this value.
-	if (managerWidget != null) {
-	    return managerWidget;
-	}
-
-	// ...otherwise we need to find the manager widget.
-	for (name in widgets) {
-	    if (widgets[name].isManager()) {
-		managerWidget = widgets[name];
-		return widgets[name];
-	    }
-	};
-
-	return false;
-    };
-
-    /* END ADDED WHEN RE-BUILDING SCALER */
-
-
-
     self.update = function() {
-/*
-	// Place events for new years
-	for (var i = 0; i < recordTiles.yearTiles.length; i++) {
-	    if (recordTiles.yearTiles[i].isNew) {
-		recordTiles.yearTiles[i].isNew = false;
-		self.placeEvents(recordTiles.yearTiles[i].val);
-	    }
-	}
-*/
     };
 
     // See Private Defaults
@@ -160,12 +53,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	// CHANGED FROM PARSEDFLOAT TO PARSEINT
 	defaults.timelineSize    = parseInt($(mainSelector).css(defaults.timelineDir));  // Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
-
-	// Just for scaler
-	defaults.bigTileTop      = defaults.bigTileOffset;
-
-	// ...for pulling icons in and whatnot:
-        defaults.imgUrl          = defaults.url + "javascripts/chronos/";
 
 
 	// START BUILDING TIMELINE
@@ -202,7 +89,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							    eventViewType:       'icon'
 							}, dataModel);
 
-/*
+/*  IN PROGRESS.
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
 							     startDate:           defaults.startDate,
 							     volumePercentage:    '10',
@@ -216,11 +103,12 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 */
 
 
-	 // First we have to figure out the 'manager' secondsToPixels value.
-	 // Then we set it for each of the other columns.
-	 // Probably, the manager idea shouldn't be known at all by the sub-columns...but how to
-	 // implement checkTiles if so?
-
+	/*
+	 * First we have to figure out the 'manager' secondsToPixels value.
+	 * Then we set it for each of the other columns.
+	 * Probably, the manager shouldn't be known at all by the widgets...
+	 * but how to implement checkTiles if so?
+	 */
 	var managerStP = 0;
 
 	managerWidget = self.getManager();
@@ -244,15 +132,38 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     };
 
 
+    /*
+     *  Initialize variables holding mouse position so initial calculations are correct.
+     */
+    self.mousePrePos = function () {
+	$(document).mousemove(
+	    function (e) {
+		defaults.mouseX = e.pageX;
+		defaults.mouseY = e.pageY;
+	    });
+    };
+
 
     /*
-     *
+     * Helper function for use with tile events:
+     */
+    self.getWidgetWithSelector = function (widgetSelectorName) {
+	for (name in widgets) {
+	    if (widgets[name].getSelector() == ("#" + widgetSelectorName)) {
+		return widgets[name];
+	    }
+	}
+	return false;
+    };
+
+
+    /*
+     * Initiates and sets proper behavior (proper synchronization during and when stopping) for dragging.
      */
     self.initiateTileEvents = function () {
 	$(mainSelector).mousedown(
 	    function() {
 		defaults.wasMouseY = defaults.mouseY;
-		defaults.wasMouseY2 = defaults.mouseY;
 	    });
 
 	// Something in here actually seems to "kick" the tiles into the right position...
@@ -289,9 +200,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    widgets[name].setTop(pixelsToMove);
 
 		    // trying to figure out less costly algorithm for generating tiles...this ain't it...
-//		    if (pixelsToMove > 50) {
+		    // if (pixelsToMove > 50) {
 			//widgets[name].checkTiles();
-//		    }
+		    //}
 
 		}
 
@@ -328,68 +239,61 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     };
 
 
-
-    /*
-     * 
-     * Initiates (UI) events on individual (DateTime) events.
-     * 
+    /********************************************************************************************
+     * SETTERS/GETTERS
      * 
      */
-    self.initiateEventEvents = function () {
-	/* FORMERLY INTERACT */
-	// global to timelineYears items:
-	var eventID = '';
 
-	var listCenterTop = 0;  // Is there any reason for this to be global?
-
-	// Hovers on timeline years
-	$("#timelineYears img").live("mouseover",
-				     function() {
-					 eventID = $(this).attr("id").replace('chart-','');
-					 $(this).addClass("active");
-					 
-					 if ($(this).hasClass("nonResult")) {
-					     $("#list-" + eventID).slideDown().addClass("tempDisplay");
-					     return false;
-					 }
-
-					 $("#list-" + eventID).addClass("active");
-				     });
-	
-	$("#timelineYears img").live("mouseout",
-				     function() {
-					 $(this).removeClass("active");
-
-					 if ($(this).hasClass("nonResult")){
-					     $("#list-" + eventID).slideUp().addClass("removeClass");
-					     return false;
-					 }
-
-					 $("#list-" + eventID).removeClass("active");
-				     });
+    self.getSize = function () {
+	return defaults.timelineSize;
     };
 
-
-
-    self.mousePrePos = function () {
-	$(document).mousemove(
-	    function (e) {
-		defaults.mouseX = e.pageX;
-		defaults.mouseY = e.pageY;
-	    });
+    self.getDir = function () {
+	return defaults.timelineDir;
     };
 
-    /*
-     * Helper function for use with events:
-     */
-    self.getWidgetWithSelector = function (widgetSelectorName) {
+    self.getPerp = function () {
+	return defaults.perp;
+    };
+
+    self.getMouseDiff = function () {
+	return defaults.wasMouseY - defaults.mouseY;
+    };
+
+    self.updateMousePos = function () {
+	defaults.wasMouseY = defaults.mouseY;
+    };
+
+    self.getMousePos = function () {
+	return defaults.mouseY;
+    };
+
+    /* ADDED WHEN RE-BUILDING SCALER -DD, 03/02/10 */
+    /* These two only used in scaler.  Can be replaced/removed at some point? */
+
+    self.getSelector = function () {
+	return mainSelector;
+    };
+
+    self.getManager = function () {
+	// If we've already looped through and found this, just return this value.
+	if (managerWidget != null) {
+	    return managerWidget;
+	}
+
+	// ...otherwise we need to find the manager widget.
 	for (name in widgets) {
-	    if (widgets[name].getSelector() == ("#" + widgetSelectorName)) {
+	    if (widgets[name].isManager()) {
+		managerWidget = widgets[name];
 		return widgets[name];
 	    }
-	}
+	};
+
 	return false;
     };
+
+    /* END ADDED WHEN RE-BUILDING SCALER */
+
 
     // end of model factory function
     return self;

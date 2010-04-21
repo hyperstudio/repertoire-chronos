@@ -1,1 +1,36 @@
-test test
+Requirements:
+---------------------------------------------------------
+
+-Repertoire AJAX toolkit widgets: all that is needed is the directory /public/javascripts/rep.widgets --copy this to your javascripts directory and you should be all set.
+-jQuery >= 1.4.x  (http://jquery.com/)
+-jQuery UI >= 1.8.x  (http://jqueryui.com/)
+-jQuery 'UI lightness' (http://jqueryui.com/themeroller/ --click on "Gallery" on the left and select UI Lightness)
+-Datejs ( http://code.google.com/p/datejs/source/checkout : using Revision #191, 2008-05-12  --MUST REVIEW THIS SO WE CAN DECIDE HOW TO DEAL WITH IT...looks like the last substantial update was 1998...eek.)
+
+
+Using Repertoire Chronos:
+---------------------------------------------------------
+
+Include these two files:
+ -javascripts/chronos/jquery.chronos.js
+ -javascripts/chronos/timeline.css
+
+
+You will also need to have included the necessary jQuery and datejs files:
+
+-jquery.js
+-jquery-ui.js
+-datejs/build/date.js
+-datejs/build/time.js
+-ui-lightness/jquery-ui.css
+
+
+So, for example, your html header may include the following lines:
+
+<script src="javascripts/jquery-1.4.2.js"></script>
+<script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
+<script src="javascripts/datejs/build/date.js"></script>
+<script src="javascripts/datejs/build/time.js"></script>
+<script src="javascripts/chronos/jquery.chronos.js"></script>
+<link media="all" type="text/css" href="javascripts/chronos/timeline.css" rel="Stylesheet" charset="utf-8" />
+<link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.7.2.custom.css" rel="Stylesheet" charset="utf-8" />

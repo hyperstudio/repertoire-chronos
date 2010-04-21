@@ -1,6 +1,9 @@
 /*
  * Sub-Widget class for Chronos Timeline
  * 
+ *  TODO: CLEANUP COMMENTS
+ *        ...and more...
+ * 
  */
 
 //= require <jquery>
@@ -14,31 +17,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
     // default: no options specified
     options = options || {};
-
-
-    /*
-     * 
-     * What does this class "own?"
-     * 
-     * -Tile size.
-     * -Event responder definition/initialization
-     * -tiling method/function?
-     * -positioning information
-     * -(datetime) event model(s)?
-     * -current top/center/bottom points, including mapping to datetime information?  Should be through reference to event model?
-     * 
-     * 
-     * 
-     * 
-     * We have two main uses of date/time information.
-     * 
-     * - figuring out the 'rough' ratio between main interval and sub-interval (year to month, month to day, etc.)
-     * - figuring out the 'more exact' ratio between date/time events and the interval they are placed within (sub-interval of tile)
-     * 
-     * 
-     * 
-     * 
-     */
 
 
     // PRIVATE
@@ -90,60 +68,15 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var topPositionRatio     = 0;
     var bottomPositionRatio  = 0;
 
+    /*
+     * Utility function to generate consistent naming for model class:
+     */
+    var generateModelClass = function (date) {
+	return intervalName + '_' + date.toString('yyyy_MM_dd-HH_mm_ss');
+    };
+
+
     // PUBLIC
-
-    self.getTopPositionRatio = function () {
-	return topPositionRatio;
-    };
-
-    self.resetTopPositionRatio = function () {
-	topPositionRatio = ( self.getTop() / self.getSize() ) * -1;
-	return topPositionRatio;
-    };
-
-    self.getBottomPositionRatio = function () {
-	return bottomPositionRatio;
-    };
-
-    self.resetBottomPositionRatio = function () {
-	bottomPositionRatio = ( (self.getTop() - timelineSize) / self.getSize() ) * -1;
-	return bottomPositionRatio;
-    };
-
-    self.getDragChange = function () {
-	return pixelDragChange;
-    };
-
-    self.setDragChange = function (dragChange) {
-	pixelDragChange = dragChange;
-	return pixelDragChange;
-    };
-
-    self.getSize = function () {
-	return parseFloat($(widgetSelector).height());
-    };
-
-    self.getTop = function () {
-	return parseFloat($(widgetSelector).css('top'));
-    };
-
-    self.setTop = function (topChange) {
-	var checkTop = parseFloat($(widgetSelector).css('top'));
-	var adjustedTopChange = topChange + topSetValueRemainder;
-	var adjustedTopChangeNoDecimal = adjustedTopChange;
-	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
-
-	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
-
-	//// $("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
-
-	// A little hack to let this function handle animation too...
-	if (arguments[1] == true) {
-	    $(widgetSelector).animate({"top": topSetValue + 'px'}, 500);
-	} else {
-	    $(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
-	}
-    };
 
     self.update = function () {
     };
@@ -217,34 +150,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	self.checkTiles();
 	self.drawEvents();
-    };
-
-
-    self.getSelector = function () {
-	return widgetSelector;
-    };
-
-    self.isManager = function () {
-	return isManager;
-    };
-
-    self.setManagerStP = function (initManagerStP) {
-	managerStP = initManagerStP;
-    };
-
-    self.getSecondsToPixels = function () {
-	return secondsToPixels;
-    };
-
-    /* fucks everything up!? */
-    self.setSecondsToPixels = function (newSecondsToPixels) {
-	// $("#dataMonitor #stpSetting span.data").html( 'newSecondsToPixels = ' + newSecondsToPixels + ', oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels );
-	oldSecondsToPixels = secondsToPixels;
-	secondsToPixels    = newSecondsToPixels;
-    };
-
-    self.getOldSecondsToPixels = function () {
-	return oldSecondsToPixels;
     };
 
 
@@ -463,15 +368,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 		// USING THIS!?
 		// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
 		// thisSubIntervalContainerElement.addClass(subIntervalHeightRemainder.toString());
-
-
-		// FIX
-		// Now, re-draw events.  First remove old events:
-		//$('div').find('img.eDot').remove()
-		//$('div').find('img.eDensity').remove();
-
-		// Re-draw events for this tile:
-		//self.drawEvents(thisDate);
 	});
 
 	return true;
@@ -598,6 +494,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
+    /*
+     *  Paints events to tiles.  Expect an argument of a specific date to paint.
+     */
     self.drawEvents = function (dateFilter) {
 	
 	/*
@@ -746,13 +645,130 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    // PRIVATE
+    /********************************************************************************************
+     * SETTERS/GETTERS
+     * 
+     */
+
+    self.getSelector = function () {
+	return widgetSelector;
+    };
+
+    self.isManager = function () {
+	return isManager;
+    };
+
+    self.setManagerStP = function (initManagerStP) {
+	managerStP = initManagerStP;
+    };
+
+    self.getSecondsToPixels = function () {
+	return secondsToPixels;
+    };
+
+    /* fucks everything up!? */
+    self.setSecondsToPixels = function (newSecondsToPixels) {
+	// $("#dataMonitor #stpSetting span.data").html( 'newSecondsToPixels = ' + newSecondsToPixels + ', oldSecondsToPixels = ' + oldSecondsToPixels + ', secondsToPixels = ' + secondsToPixels );
+	oldSecondsToPixels = secondsToPixels;
+	secondsToPixels    = newSecondsToPixels;
+    };
+
+    self.getOldSecondsToPixels = function () {
+	return oldSecondsToPixels;
+    };
+
+    self.getTopPositionRatio = function () {
+	return topPositionRatio;
+    };
+
+    self.resetTopPositionRatio = function () {
+	topPositionRatio = ( self.getTop() / self.getSize() ) * -1;
+	return topPositionRatio;
+    };
+
+    self.getBottomPositionRatio = function () {
+	return bottomPositionRatio;
+    };
+
+    self.resetBottomPositionRatio = function () {
+	bottomPositionRatio = ( (self.getTop() - timelineSize) / self.getSize() ) * -1;
+	return bottomPositionRatio;
+    };
+
+    self.getDragChange = function () {
+	return pixelDragChange;
+    };
+
+    self.setDragChange = function (dragChange) {
+	pixelDragChange = dragChange;
+	return pixelDragChange;
+    };
+
+    self.getSize = function () {
+	return parseFloat($(widgetSelector).height());
+    };
+
+    self.getTop = function () {
+	return parseFloat($(widgetSelector).css('top'));
+    };
+
+    self.setTop = function (topChange) {
+	var checkTop = parseFloat($(widgetSelector).css('top'));
+	var adjustedTopChange = topChange + topSetValueRemainder;
+	var adjustedTopChangeNoDecimal = adjustedTopChange;
+	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
+
+	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
+
+	//// $("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
+
+	// A little hack to let this function handle animation too...
+	if (arguments[1] == true) {
+	    $(widgetSelector).animate({"top": topSetValue + 'px'}, 500);
+	} else {
+	    $(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
+	}
+    };
+
+
+
+    // Should (DateTime) Events have their own class?
 
     /*
-     * Utility function to generate consistent naming for model class:
+     * Initiates (UI) events on individual (DateTime) events.
      */
-    var generateModelClass = function (date) {
-	return intervalName + '_' + date.toString('yyyy_MM_dd-HH_mm_ss');
+    self.initiateEventEvents = function () {
+	/* FORMERLY INTERACT */
+	// global to timelineYears items:
+	var eventID = '';
+
+	var listCenterTop = 0;  // Is there any reason for this to be global?
+
+	// Hovers on timeline years
+	$("#timelineYears img").live("mouseover",
+				     function() {
+					 eventID = $(this).attr("id").replace('chart-','');
+					 $(this).addClass("active");
+					 
+					 if ($(this).hasClass("nonResult")) {
+					     $("#list-" + eventID).slideDown().addClass("tempDisplay");
+					     return false;
+					 }
+
+					 $("#list-" + eventID).addClass("active");
+				     });
+	
+	$("#timelineYears img").live("mouseout",
+				     function() {
+					 $(this).removeClass("active");
+
+					 if ($(this).hasClass("nonResult")){
+					     $("#list-" + eventID).slideUp().addClass("removeClass");
+					     return false;
+					 }
+
+					 $("#list-" + eventID).removeClass("active");
+				     });
     };
 
 

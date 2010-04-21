@@ -3,26 +3,16 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
+  <!-- requirements: -->
   <script src="javascripts/jquery-1.4.2.js"></script>
   <script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
-
   <script src="javascripts/datejs/build/date.js"></script>
   <script src="javascripts/datejs/build/time.js"></script>
 
-  <script src="javascripts/rep.widgets/global.js"></script>
-  <script src="javascripts/rep.widgets/model.js"></script>
-  <script src="javascripts/rep.widgets/widget.js"></script>
-  <script src="javascripts/rep.widgets/events.js"></script>
-
-  <script src="javascripts/chronos/rep.chronos.util.js"></script>
-  <script src="javascripts/chronos/rep.chronos.global.js"></script>
-  <script src="javascripts/chronos/rep.chronos.model.js"></script>
-  <script src="javascripts/chronos/rep.chronos.timeline.js"></script>
-  <script src="javascripts/chronos/rep.chronos.widget.js"></script>
-  <script src="javascripts/chronos/rep.chronos.scaler.js"></script>
-
+  <!-- now load Repertoire Chronos: -->
   <script src="javascripts/chronos/jquery.chronos.js"></script>
 
+  <!-- ...and the necessary CSS -->
   <link media="all" type="text/css" href="javascripts/chronos/timeline.css" rel="Stylesheet" charset="utf-8" />
   <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.7.2.custom.css" rel="Stylesheet" charset="utf-8" />
 
@@ -39,7 +29,9 @@
   $(document).ready(
     function() {
       $('#chronos').chronos({
-        url:        'http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json',
+        url:        'http://slebinos.mit.edu/dev/repertoire-chronos/',
+        js_path:    'javascripts/',
+        data_url:   'http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json',
         data_start: 'feed.entry',
         date_name:  'content.$t.start',
         id_name:    'content.$t.eventid',
