@@ -218,7 +218,11 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    // Bit of a hack but in here for now to make sure we are doing this at all...
 		    // if it is in the above, then it slows things down dramatically.  Need new
 		    // methodology.
-		    widgets[name].checkTiles();
+		    var datesTiled = widgets[name].checkTiles();
+
+		    for (var d = 0; d < datesTiled.length; d++) {
+			widgets[name].drawEvents(datesTiled[d]);
+		    }
 
 		    // This needs to be reset for all since movement will change ratio:
 		    // (and it must happen after checkTiles(), since that will alter

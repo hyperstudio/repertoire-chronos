@@ -460,8 +460,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var testInc = 0;
 	var testIncTest = 4;
 
+	var datesTiled = new Array();
+
 	while (upTest() && testInc < testIncTest) {
 	    checkTop += self.tile('up');
+            datesTiled.push(topDate);
 
 	    // These need to be adjusted by the last *tile* size not the sub-interval height value.
 	    if (!isManager) {
@@ -481,6 +484,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	while (downTest() && testInc < testIncTest) {
 	    checkHeight += self.tile('down');
+            datesTiled.push(bottomDate);
 
 	    if (!isManager) {
 		tileFactor -= 1;
@@ -491,6 +495,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    testInc++;
 	}
 
+	// Return array of datesTiled (for drawEvents to process if need be).
+	return datesTiled;
     };
 
 
@@ -527,14 +533,15 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1,2})");
 
 	//$("#dataMonitor #dates span.data").html('');
-	$("#dataMonitor #dates span.data").append("<br />");
+	// $("#dataMonitor #dates span.data").append("<br />");
 
 	// The matched tiles
 	var tileResultSet = {};
 
 	if (dateFilter) {
 	    tileResultSet = $(widgetSelector).find("div." + generateModelClass(dateFilter)).children();
-	    $("#dataMonitor #dates span.data").append('size: ' + tileResultSet.size() + '<br />');
+	    // $("#dataMonitor #dates span.data").append('size: ' + tileResultSet.size() + '<br />');
+	    // $("#dataMonitor #dates span.data").append('div is: div.' + generateModelClass(dateFilter) + '<br />');
 	} else {
 	    tileResultSet = $(widgetSelector).find("." + intervalName + "Model").children();
 	}
@@ -552,7 +559,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			var tileStartDate = '';
 
 			if (dateFilter != null) {
-			    tileStartDate = dateFilter;
+			    tileStartDate = dateFilter.clone();  // Clone so we don't inadvertently increment the date, as it is passed by reference vs. value. 
+                            // $("#dataMonitor #dates span.data").append("<br /> are we here? " + tileStartDate.toString() + "<br />");
 			} else {
 			    tileStartDate = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
 			}
@@ -561,16 +569,16 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			addIntervalSpec[subIntervalName + 's'] = dateClass[7];
 			tileStartDate.add(addIntervalSpec);
 
-			$("#dataMonitor #dates span.data").append("Start date for this tile: " + tileStartDate.toString() + ", interval spec: " + addIntervalSpec[subIntervalName + 's'] + "<br />");
+			// $("#dataMonitor #dates span.data").append("Start date for this tile: " + tileStartDate.toString() + ", interval spec: " + addIntervalSpec[subIntervalName + 's'] + "<br />");
 
 			var events = dataModel.getEventsInInterval(tileStartDate, subIntervalName);
 
-			$("#dataMonitor #dates span.data").append("events result length: " + events.length);
+			//$("#dataMonitor #dates span.data").append("events result length: " + events.length + "<br />");
 
 
 			var parentHeight = parseInt($(element).height());
 
-			$("#dataMonitor #dates span.data").append("<ul>");
+			//$("#dataMonitor #dates span.data").append("<ul>");
 
 			for (var i = 0, j = events.length; i < j; i++) {
 
@@ -580,19 +588,26 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 			    // Debugging
 
+/*
 			    $("#dataMonitor #dates span.data").append(
 				"<li>" + events[i].id + ': ' + events[i].start.toString() + ", "
 				    + dataModel.getIntervalInSeconds(tileStartDate, events[i].start) + " ... "
 				    + topPosition + "</li>"
 			    );
+*/
 
 			    if (eventViewType == 'icon') {
 				// TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
 				var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
 				// var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;
 
-				var leftPosition = 0;
+				var leftPosition = 20;
 				leftPosition = (wasPosCount * iconWidth) - iconWidth; // how far to indent?
+
+				// Okay, so, this is just a bit of a hack for now to prevent event icons from pushing into adjacent widget.
+				if (leftPosition < 0) {
+				    leftPosition = 0;
+                                }
 
 				// If we're stacking to right
 				if (switchDir == false){
@@ -633,7 +648,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    }
 			}
 
-			$("#dataMonitor #dates span.data").append("</ul><br /><br />");
+			//$("#dataMonitor #dates span.data").append("</ul><br /><br />");
 
 			return true;  // ENDS 'li' loop anonymous function
 		    }
@@ -641,7 +656,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    }
 	);
 
-	$("#dataMonitor #dates span.data").append("<br />");
+	// $("#dataMonitor #dates span.data").append("<br />");
     };
 
 

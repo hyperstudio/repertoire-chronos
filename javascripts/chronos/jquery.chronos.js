@@ -10,6 +10,7 @@
 
 	 if (settings) $.extend(config, settings);
 
+         // What's the "right way to fail here?"  Probably should not set it to our URL, not that it's that bad...
 	 if (config.url == null)
 	     config.url = "http://slebinos.mit.edu/dev/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
 
@@ -23,6 +24,8 @@
 	 /* LOAD REQUIRED JS */
 
 	 var requiredJS = [
+	     'datejs/build/date.js',
+	     'datejs/build/time.js',
 	     'rep.widgets/global.js',
 	     'rep.widgets/model.js',
 	     'rep.widgets/widget.js',
@@ -44,7 +47,9 @@
 			     url:      full_path,
 			     data:     null,
 			     success:  success_callback,
-			     dataType: 'script'
+			     dataType: 'script',
+			     cache:    true              // Evidently passing in option 'script' for dataType disables caching: 
+                                                         // http://api.jquery.com/jQuery.ajax/
 			 });
 
 	     // Doesn't work synchronously so it's kinda not useful for this.
@@ -123,7 +128,7 @@
 		 }
 
 		 // Just testing for now.  Need to build more thorough scaffolding (class?) for this.
-		 $('img.eDot').click(
+		 $('img.eDot').live('click',
 		     function (index, element) {
 			 $('div#eventListing span.data').html('<br /><br />id: ' + $(this).attr('id') + '<br />title: ' + $(this).attr('title') + '<br />date: ' + $(this).attr('date') + '<br />style: ' + $(this).attr('style') + '<br />');
 		     }

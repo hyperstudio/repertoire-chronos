@@ -181,8 +181,12 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		    }
 		}
 
+		// Make sure we have populated the tiles and events outside what's currently viewable:
+		var datesTiled = widgets[name].checkTiles();
 
-		widgets[name].checkTiles();
+		for (var d = 0; d < datesTiled.length; d++) {
+		    widgets[name].drawEvents(datesTiled[d]);
+		}
 
 		// This needs to be reset for all since movement will change ratio: 
 		widgets[name].resetTopPositionRatio();
