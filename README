@@ -1,3 +1,14 @@
+Repertoire Chronos
+---------------------------------------------------------
+
+The Repertoire Chronos Timeline was designed and built by Brett Barros (babarros@mit.edu) and Dave Della Costa (dfd@mit.edu) of MIT's HyperStudio (http://hyperstudio.mit.edu/) with help and architecture suggestions from Christopher York (yorkc@mit.edu).  While still in early beta, with many planned features still outstanding, Chronos provides these features now:
+
+-A vertical, real-time adjustable view of datetime events in timeline format.
+-JSON data format input.
+-Easily "CSS-tweakable" visual elements.
+-jQuery integration and installation as a jQuery plug-in.
+ 
+
 Requirements:
 ---------------------------------------------------------
 

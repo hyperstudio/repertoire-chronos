@@ -1,0 +1,11 @@
+04/26/10
+-------------------------------------------------------
+dfd@mit.edu
+
+-Review API for naming consistency and "appropriateness"
+-Better docs (finish commenting methods so all will work with jsdoc-toolkit, flesh out README more, add FAQ?)
+-Create display type for durations (events with 'end' datetime values)
+-Accept XML
+-Buffer JSON/XML AJAX data, abstracted by model class
+-Adjust timelines so other timelines (other than just scaler view widget) can be integrated and will scale accurately
+-Review configuration to see what else needs to be expose, and add it
