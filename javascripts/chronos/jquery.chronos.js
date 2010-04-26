@@ -140,7 +140,7 @@
                              title = $(this).attr('title');
 			 }
 
-                         $('div#eventListing span.data').html('<br /><br />id: ' + $(this).attr('id') + '<br />title: ' + title + '<br />date: ' + $(this).attr('date') + '<br />style: ' + $(this).attr('style') + '<br />');
+                         $('div#eventListing span.data').html('<br /><br />id: <span class="id">' + $(this).attr('id') + '</span><br />title: <span class="title">' + title + '</span><br />date: <span class="date">' + $(this).attr('date') + '</span><br />style: ' + $(this).attr('style') + '<br />');
 		     }
 		 );
 	     }

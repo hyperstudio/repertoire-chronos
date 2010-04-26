@@ -81,3 +81,5 @@ html, body {height:100%} /* 100% height is only required if you want timeline to
 #dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px dotted red; width: 700px; }
 #dataMonitor div { margin-bottom: 15px; }
 #dataMonitor span.dataTitle { font-weight: bold; color: #f85; }
+
+div#eventListing span.data span.title, div#eventListing span.data span.id, div#eventListing span.data span.date { font-weight: bold; }
