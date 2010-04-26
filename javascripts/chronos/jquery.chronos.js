@@ -130,7 +130,17 @@
 		 // Just testing for now.  Need to build more thorough scaffolding (class?) for this.
 		 $('img.eDot').live('click',
 		     function (index, element) {
-			 $('div#eventListing span.data').html('<br /><br />id: ' + $(this).attr('id') + '<br />title: ' + $(this).attr('title') + '<br />date: ' + $(this).attr('date') + '<br />style: ' + $(this).attr('style') + '<br />');
+                         var title = '';
+                         if ($(this).attr('title').match(/\\u[a-zA-Z0-9]{4}/)) {
+			     // Figuring out exactly how to do this made me want to punch the internet in 
+			     // general, and Mozilla's JS Dev site in particular.
+                             var unicode_regexp = /\\u([a-zA-Z0-9]{4})/g;
+                             title = $(this).attr('title').replace(unicode_regexp, '&#x$1;');  // meh.
+			 } else {
+                             title = $(this).attr('title');
+			 }
+
+                         $('div#eventListing span.data').html('<br /><br />id: ' + $(this).attr('id') + '<br />title: ' + title + '<br />date: ' + $(this).attr('date') + '<br />style: ' + $(this).attr('style') + '<br />');
 		     }
 		 );
 	     }
