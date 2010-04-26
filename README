@@ -10,12 +10,12 @@ Requirements:
 Using Repertoire Chronos:
 ---------------------------------------------------------
 
-You will also need to have included the necessary jQuery and datejs files:
+You will need to have included the necessary jQuery files:
 -jquery.js
 -jquery-ui.js
 -ui-lightness/jquery-ui.css
 
-Include these two files:
+As for Repertoire Chronos, include these two files:
  -javascripts/chronos/jquery.chronos.js
  -javascripts/chronos/timeline.css
 
