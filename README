@@ -76,6 +76,56 @@ And then, add the jQuery configuration:
   </script>
 
 
+Configuration
+---------------------------------------------------------
+
+At the present time a very limited set of values is available for setting, basically only the bare minimum necessary for functioning (this will most certainly be changing very soon...many more features will be exposed for configuration).  The configuration represents primarily url and path information so Chronos can find the necessary source files and display correctly, and data configuration so Chronos knows how to read your data.
+
+url:         this should be the full url to the root of your application.
+
+js_path:     the relative path to your javascript directory, assumed to be under the application path (see 'url' above).
+
+data_url:    this is the URL for your JSON feed.
+
+data_start, date_name, id_name, title_name:  these four fields represent the default required fields for your JSON feed.  Chronos expects to see a JSON feed formatted with the name given in 'data_start,' containing multiple instances of objects having the properties named in the variables "date_name," "id_name,"  and "title_name."  Specifics below:
+
+date_name:   the date of the event.  Chronos uses datejs's parse functionality to import dates--see here: http://code.google.com/p/datejs/wiki/APIDocumentation#parse
+id_name:     an arbitrary value currently used for generating unique CSS ids.
+title_name:  the title of the event.
+
+If these four (data_start, date_name, id_name, title_name) values are not present, these default names are assumed to exist in your JSON data feed:  events, start, id, title.
+
+
+For example, if your JSON was structured like so:
+
+{
+  "events": [
+    {
+      "id": 3735,
+      "title": "Negotiations on the Treaty of Versailles",
+      "start": "1919-01-18T00:00:00-04:00"
+    },
+    {
+      "id": 4172,
+      "title": "This is an evenet FAKE",
+      "start": "1957-01-20T00:00:00-04:00"
+    },
+    {
+      "id": 3736,
+      "title": "Algiers Accord is signed",
+      "start": "1975-03-06T00:00:00-04:00"
+    }
+  ],
+}
+
+data_start would be 'events,'
+date_name would be 'start,'
+id_name would be 'id,'
+and title_name would be 'title.'
+
+But, in this case, you could leave all of these values out--these names are the defaults.
+
+
 
 External libraries packaged with this package:
 ---------------------------------------------------------
