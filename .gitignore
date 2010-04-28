@@ -1,0 +1,10 @@
+*~
+.svn*
+javascripts/jquery*js
+javascripts/ui-lightness*
+*jsdoc*
+*dependencies*
+*datejs-read-only*
+*backup*
+*back*
+*bk*
