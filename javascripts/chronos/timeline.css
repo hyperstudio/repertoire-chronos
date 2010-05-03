@@ -78,7 +78,9 @@ html, body {height:100%} /* 100% height is only required if you want timeline to
 	
 /* reorganize later */
 
-#dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px dotted red; width: 700px; }
+div#gs { float: left; margin: 20px; padding: 20px; border: 2px solid light blue; width: 700px; }
+
+#dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px solid gray; width: 700px; }
 #dataMonitor div { margin-bottom: 15px; }
 #dataMonitor span.dataTitle { font-weight: bold; color: #f85; }
 

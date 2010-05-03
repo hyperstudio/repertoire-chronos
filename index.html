@@ -4,7 +4,7 @@
   <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
   <!-- requirements: -->
-  <script src="javascripts/jquery-1.4.2.min.js"></script>
+  <script src="javascripts/jquery-1.4.2.js"></script>
   <script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
 
   <!-- now load Repertoire Chronos: -->
@@ -12,7 +12,7 @@
 
   <!-- ...and the necessary CSS -->
   <link media="all" type="text/css" href="javascripts/chronos/timeline.css" rel="Stylesheet" charset="utf-8" />
-  <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.8.custom.css" rel="Stylesheet" charset="utf-8" />
+  <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.7.2.custom.css" rel="Stylesheet" charset="utf-8" />
 
   <style>
   body {
@@ -26,15 +26,32 @@
 
   $(document).ready(
     function() {
-      $('#chronos').chronos({
-        url:        'http://hs-dev.mit.edu/repertoire-chronos/',
-        js_path:    'javascripts/',
-        data_url:   'http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json',
-        data_start: 'feed.entry',
-        date_name:  'content.$t.start',
-        id_name:    'content.$t.eventid',
-        title_name: 'title.$t'
-      });
+      var chronos_config = {
+        url:        'http://slebinos.mit.edu/dev/repertoire-chronos/',
+        js_path:    'javascripts/'
+      };
+
+      var URLString = document.location.toString(); // Have to do this so we can run .match() on it...?
+      var data_url = false;
+
+      // http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json
+
+      // Really basic check to make sure we've got a google URL and not something else...not rigorous, but will do for demo.
+      if (URLString.match('spreadsheets.google.com') && URLString.match('gs_url=(.*)&')) {
+        var matches = URLString.match('gs_url=(.*)&')
+        chronos_config['data_url']   = decodeURIComponent(matches[1]);
+        chronos_config['data_start'] = 'feed.entry';
+        chronos_config['date_name']  = 'content.$t.start';
+        chronos_config['id_name']    = 'content.$t.eventid';
+        chronos_config['title_name'] = 'title.$t';
+      } else if (URLString.match('gs_url=(.*)&')) {
+        alert("I'm sorry, the URL must be a Google spreadsheets URL. See below for formatting instructions. (Reverting to default data-set.)");
+        chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
+      } else {
+        chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
+      }
+
+      $('#chronos').chronos(chronos_config);
     }
   );
 
@@ -51,6 +68,26 @@
 <!-- BEGIN HTML CODE FOR THE TIMELINE -->
 <div id="chronos" class="panelResize"></div>
 
+<div id="gs">
+  <form id='gs' name='gs' action='' method='GET' />
+  <p>Enter your Google Spreadsheet URL here to see your data in the Chronos timeline:<br />
+  (for an example, try:<br />
+  <a href="http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json">http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json</a></p>
+
+  <input type='text' id='gs_field' value='' name='gs_url' size='100' /><br />
+  <input type='submit' id='gs_submit' name='gs_submit' value='Update' /><br />
+  </form>
+
+  <p>Note that this application expects three fields (column names) to be present in your spreadsheet:</p>
+  <ul>
+    <li>- start (the field containing the datetime information)</li>
+    <li>- eventid (an arbitrary numeric identifier)</li>
+    <li>- title (title or description of datetime event)</li>
+  </ul>
+
+  <p>For more details on formatting your spreadsheet and generating a URL, see here.</p>
+
+</div>
 
 <div id="dataMonitor">
 
