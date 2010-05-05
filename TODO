@@ -12,18 +12,31 @@ dfd@mit.edu
 
 
 MAKING TIMELINE HORIZONTAL: DD & BB Notes 05/02/10
+-------------------------------------------------------
+*means Dave thinks it's taken care of, more or less:
 
-- variable for making timeline horizontal, where does it need to go?  Where *isn't* it?  Will be called "orientation."
+* - variable for making timeline horizontal, where does it need to go?  Where *isn't* it?  Will be called "orientation."
 
-- column 'width' / 'height'
+* - column 'width' / 'height'
 
-- make sure we account for height being 0 when we shift orientation to horizontal vs. vertical
+* - make sure we account for height being 0 when we shift orientation to horizontal vs. vertical
 
-- we need to set the dimension that we are not oriented to to 100%
+* - we need to set the dimension that we are not oriented to to 100%
   that is, if width, we set height for any given column to be 100%
   if height, width needs to be 100% - 100% of enclosing div, that is.
 
-- sub-tiles are same as tiles.
+* - sub-tiles are same as tiles.
 
-- for events: left switches to top, top switches to left.
+* - for events: left switches to top, top switches to left.
 
+
+DD: bugs horizontal positioning: 05/05/10
+-------------------------------------------------------
+- why do I need to have a huge width for decades row in order for divs not to wrap--seems like it's far greater than total width of divs?
+- initial positioning isn't synced; bottom (years) row seems pretty good, but top (decades) not so much. 
+- 'position: absolute;' in .marker throws things off; while with that turned off syncing is not completely terrible (but still off), with that on, it's totally whacked out.
+- scaler's re-size handles seem to stop registering in handler after initial "pull"...wtf?
+- images for scaler background and 'density' event icons need to be re-generated? (Brett)
+- CSS tweaks my programmer self is not aware of (Brett), and also, sorry Brett for my ugly ass timeline.css mangling.  It works, but maybe not so elegantly...
+
+There is probably other stuff I'm forgetting too.

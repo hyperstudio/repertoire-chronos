@@ -33,12 +33,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	mouseY:              0,
 	mouseX:              0,
 	wasMouseY:           0,
-	wasMouseX:           0,
-
-	// DIRECTIONALITY HERE!
-
-	// Used by Scaler:
-	perp:                'width'                          // What is the perpendicular?
+	wasMouseX:           0
     };
 
 
@@ -140,11 +135,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	self.initiateTileEvents();
 
-/*
  	var scaler = repertoire.chronos.scaler('#scaler',{ scalerViewWidget: 'yearsWidget' }, self, widgets);
 	scaler.initialize();
 	scaler.initiateScalerEvents();
-*/
+
     };
 
 
@@ -216,7 +210,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    // if (pixelsToMove > 50) {
 			//widgets[name].checkTiles();
 		    //}
-
 		}
 
 		self.updateMousePos(); // Memory for mouse position
@@ -279,10 +272,6 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     self.getOrientation = function () {
 	return defaults.orientation;
-    };
-
-    self.getPerp = function () {
-	return defaults.perp;
     };
 
     self.getMouseDiff   = {};

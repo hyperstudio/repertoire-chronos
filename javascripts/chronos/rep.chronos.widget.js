@@ -147,7 +147,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	}
         /* END ASK BRETT... */
 
-	//alert(self.getSize());
 
 	/*
 	 *  This is where we center the column by figuring out:
@@ -168,10 +167,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	widgetOffset = Math.ceil(timelineSize / 2 + (dataModel.getSubIntervalDiff(startDate, subIntervalName) / secondsToPixels));
 	$(widgetSelector).css(startEdgeName, (widgetOffset + 'px'));     // CSS CHANGE HERE
 
-/*
-	alert('timelineSize = ' + timelineSize);
-	alert('self.getSize() = ' + self.getSize());
-*/
 	// Needed for scaling:
 	startPositionRatio  = self.getStart() / self.getSize();
 	endPositionRatio    = (self.getStart() + timelineSize) / self.getSize();
@@ -183,10 +178,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	if (orientation == 'horizontal') {
 	    self.setSize();
 	}
-/*
-	alert('timelineSize = ' + timelineSize);
-	alert('self.getSize() = ' + self.getSize());
-*/
     };
 
 
@@ -782,15 +773,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	$(widgetSelector).find('.tModel').each(
 	    function() {
-		//alert($(this).attr('class') + ' width is ' + $(this)[volumeDimensionInvName]());
-		var markerWidth = 0;
-		if (self.isManager) {
-		    //markerWidth = $(this).find('li .marker').width();  // This isn't working.  Clearly the marker is the problem, but I'm not sure how much to add to make it nice.
-		}
-		widgetSize += ($(this)[volumeDimensionInvName]() + markerWidth);
-		//widgetSize += ($(this)[volumeDimensionInvName]() + 2000);  // testing
+		widgetSize += $(this)[volumeDimensionInvName]();
 	    }
 	);
+
+	widgetSize *= 2;
 
 	$(widgetSelector)[volumeDimensionInvName](widgetSize);
 
