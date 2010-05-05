@@ -9,3 +9,21 @@ dfd@mit.edu
 -Buffer JSON/XML AJAX data, abstracted by model class
 -Adjust timelines so other timelines (other than just scaler view widget) can be integrated and will scale accurately
 -Review configuration to see what else needs to be expose, and add it
+
+
+MAKING TIMELINE HORIZONTAL: DD & BB Notes 05/02/10
+
+- variable for making timeline horizontal, where does it need to go?  Where *isn't* it?  Will be called "orientation."
+
+- column 'width' / 'height'
+
+- make sure we account for height being 0 when we shift orientation to horizontal vs. vertical
+
+- we need to set the dimension that we are not oriented to to 100%
+  that is, if width, we set height for any given column to be 100%
+  if height, width needs to be 100% - 100% of enclosing div, that is.
+
+- sub-tiles are same as tiles.
+
+- for events: left switches to top, top switches to left.
+

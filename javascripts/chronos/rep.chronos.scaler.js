@@ -43,7 +43,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
     var topArrow           = '';
     var botArrow           = '';
 
-    var scalerWidgetTop    = 0;
+    var scalerWidgetStart    = 0;
 
     // This variable represents the timeline widget that we are *representing*, in terms of its proportional size, to the 'manager' widget.
     var scalerViewWidget   = widgets[options.scalerViewWidget] || null;  // Must be set
@@ -68,9 +68,9 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	botArrow = $('<div />').appendTo(innerScalerElement);
 	botArrow.attr('id', 'botArrow');
 
-	if (timeline.getDir() == 'height') {
+	if (timeline.getOrientation() == 'vertical') {
 	    defaults.orientation = 'top';
-	} else if (timeline.getDir() == 'width') {
+	} else if (timeline.getOrientation() == 'horizontal') {
 	    defaults.orientation = 'left';
 	}
 
@@ -87,10 +87,10 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	defaults.oldScalerTop = defaults.newScalerTop;                                                                // Have a memory of old top
 
 	// Scaler Size and Placement
-	scalerElement.css(timeline.getDir(), ( defaults.scalerSize + 'px'));       // Height
+	scalerElement.css(timeline.getOrientation(), ( defaults.scalerSize + 'px'));       // Height
 	scalerElement.css(timeline.getPerp(), defaults.scalerWidth);                         // Width
 	scalerElement.css(defaults.orientation, ( defaults.newScalerTop + 'px'));                                // Top
-	innerScalerElement.css(timeline.getDir(), (defaults.scalerSize + 'px'));   // Height of innerScaler (copies scaler's height)
+	innerScalerElement.css(timeline.getOrientation(), (defaults.scalerSize + 'px'));   // Height of innerScaler (copies scaler's height)
 
 	// Set CorejQuery UI Resizability
 	scalerElement.resizable(
@@ -123,7 +123,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 	// Initialize for all widgets as generating tiles may have changed this from widget initialization:
 	for (name in widgets) {
-	    widgets[name].resetTopPositionRatio();
+	    widgets[name].resetStartPositionRatio();
 	    widgets[name].resetBottomPositionRatio();
 	    // widgets[name].resize();
 	}
@@ -154,7 +154,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	    }
 
 	    // Update top position for manager:
-	    timeline.getManager().setTop( scalerPosChange * -1, true );
+	    timeline.getManager().setStart( scalerPosChange * -1, true );
 
 	    // For moving all the *other* widgets other than Manager and SVW:
 	    if (event_type == 'resize') {
@@ -177,7 +177,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		    // move nicely within scaler/scalerViewWidget proportions:
 		    if ( !widgets[name].isManager() && (scalerViewWidget.getSelector() != widgets[name].getSelector()) ) {
 			pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
-			widgets[name].setTop(pixelsToMove * -1, true);
+			widgets[name].setStart(pixelsToMove * -1, true);
 		    }
 		}
 
@@ -189,7 +189,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		}
 
 		// This needs to be reset for all since movement will change ratio: 
-		widgets[name].resetTopPositionRatio();
+		widgets[name].resetStartPositionRatio();
 		widgets[name].resetBottomPositionRatio();
 
 	    }
@@ -219,7 +219,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 		    for (name in widgets) {
 			if (!widgets[name].isManager()) {
 			    pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
-			    widgets[name].setTop(pixelsToMove * -1);
+			    widgets[name].setStart(pixelsToMove * -1);
 			}
 		    }
 
@@ -241,7 +241,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	    function () {
 		bottomScalerDrag = true;
 		// $("#dataMonitor #scalerPosDebug span.data").html('');
-		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getTop() = ' + scalerViewWidget.getTop() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getTopPositionRatio());
+		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getStart() = ' + scalerViewWidget.getStart() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getStartPositionRatio());
 	    }
 	);
 
@@ -249,7 +249,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 	    function () {
 		topScalerDrag = true;
 		// $("#dataMonitor #scalerPosDebug span.data").html('');
-		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getTop() = ' + scalerViewWidget.getTop() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getBottomPositionRatio());
+		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getStart() = ' + scalerViewWidget.getStart() + '<br />scalerViewWidget.getBottomPositionRatio() = ' + scalerViewWidget.getBottomPositionRatio());
 	    }
 	);
 
@@ -269,9 +269,9 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			  function(event, ui) {
 
 			      $("#dataMonitor #initial span.data").html(
-				  "<br />initial top: " + scalerViewWidget.getTop()
+				  "<br />initial top: " + scalerViewWidget.getStart()
 				      + ",<br /> initial size: " + scalerViewWidget.getSize()
-				      + ", initial topPositionRatio: <br />" + scalerViewWidget.getTopPositionRatio()
+				      + ", initial startPositionRatio: <br />" + scalerViewWidget.getStartPositionRatio()
 				      + ",<br /> initial bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
 
 
@@ -298,10 +298,10 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			      scalerPosChange = timeline.getMouseDiff();
 
 			      // Store reset scaler size so we can adjust on stop:
-			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getDir()));
+			      defaults.newScalerSize = parseFloat(scalerElement.css(timeline.getOrientation()));
 
 			      // Adjust 'innerScaler' element size to match, responsible for keeping arrows "synced:"
-			      innerScalerElement.css(timeline.getDir(), (defaults.newScalerSize + 'px'));
+			      innerScalerElement.css(timeline.getOrientation(), (defaults.newScalerSize + 'px'));
 
 
 			      $("#dataMonitor #stpOld span.data").html('newScalerSize = ' + defaults.newScalerSize + '<br />oldScalerSize = ' + defaults.oldScalerSize + '<br />old STP: ' + scalerViewWidget.getSecondsToPixels());
@@ -320,9 +320,9 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 
 			      $("#dataMonitor #preResize span.data").html(
-				  "<br />current top: " + scalerViewWidget.getTop()
+				  "<br />current top: " + scalerViewWidget.getStart()
 				      + ",<br />current size: " + scalerViewWidget.getSize()
-				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />startPositionRatio: " + scalerViewWidget.getStartPositionRatio()
 				  //    + ",<br />newTop: " + newTop
 				  // + ",<br />newTopChange: " + newTopChange,
 				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
@@ -334,9 +334,9 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 
 			      $("#dataMonitor #postResize span.data").html(
-				  "<br />current top: " + scalerViewWidget.getTop()
+				  "<br />current top: " + scalerViewWidget.getStart()
 				      + ",<br />current size: " + scalerViewWidget.getSize()
-				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />startPositionRatio: " + scalerViewWidget.getStartPositionRatio()
 				   //   + ",<br />newTop: " + newTop
 				      // + ",<br />newTopChange: " + newTopChange,
 				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
@@ -348,12 +348,12 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			      // Top scaler handle drag:
 			      if (dragDirection == 'top') {
 				  newTop = (scalerViewWidget.getBottomPositionRatio() * (-1 * scalerViewWidget.getSize())) + timeline.getSize();
-				  $("#dataMonitor #dragtype span.data").html('scaler top drag!  top pos for scalerViewWidget is now:' + scalerViewWidget.getTop());
+				  $("#dataMonitor #dragtype span.data").html('scaler top drag!  top pos for scalerViewWidget is now:' + scalerViewWidget.getStart());
 
 			      // Bottom scaler handle drag:
 			      } else if (dragDirection == 'bottom') {
-				  newTop = (scalerViewWidget.getTopPositionRatio() * scalerViewWidget.getSize()) * -1;
-				  $("#dataMonitor #dragtype span.data").html('scaler bottom drag!  top pos for scalerViewWidget is now:' + scalerViewWidget.getTop());
+				  newTop = (scalerViewWidget.getStartPositionRatio() * scalerViewWidget.getSize()) * -1;
+				  $("#dataMonitor #dragtype span.data").html('scaler bottom drag!  top pos for scalerViewWidget is now:' + scalerViewWidget.getStart());
 			      }
 
 			      if (parseInt(newTop) != 0) {
@@ -363,16 +363,16 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 			      /*
 				$("#dataMonitor #svw span.data").html(
-				  "<br />current top: " + scalerViewWidget.getTop()
+				  "<br />current top: " + scalerViewWidget.getStart()
 				      + ",<br />current size: " + scalerViewWidget.getSize()
-				      + ",<br />topPositionRatio: " + scalerViewWidget.getTopPositionRatio()
+				      + ",<br />startPositionRatio: " + scalerViewWidget.getStartPositionRatio()
 				      + ",<br />newTop: " + newTop
 				      // + ",<br />newTopChange: " + newTopChange,
 				      + ",<br />bottomPositionRatio: " + scalerViewWidget.getBottomPositionRatio());
 			      */
 
 			      // Makes things more complicated...
-			      // scalerViewWidget.setTop(newTopChange);
+			      // scalerViewWidget.setStart(newTopChange);
 
 
 			      // Then we process the rest of the widgets:
@@ -392,24 +392,24 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 				      // Top scaler handle drag:
 				      if (defaults.oldScalerTop != defaults.newScalerTop) {
-					  newTopChangeW = ((widgets[name].getBottomPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
+					  newTopChangeW = ((widgets[name].getBottomPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getStart();
                                       // Bottom scaler handle drag:
 				      } else {
-					  newTopW       = (widgets[name].getTopPositionRatio() * widgets[name].getSize());
-					  // newTopChangeW = ((widgets[name].getTopPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
-					  newTopChangeW = ((widgets[name].getTopPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getTop();
+					  newTopW       = (widgets[name].getStartPositionRatio() * widgets[name].getSize());
+					  // newTopChangeW = ((widgets[name].getStartPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getStart();
+					  newTopChangeW = ((widgets[name].getStartPositionRatio() * -1) * widgets[name].getSize()) + widgets[name].getStart();
 				      }
 
 				      /*
 					$("#dataMonitor #ow span.data").html(
-					  "<br />current top: " + widgets[name].getTop()
+					  "<br />current top: " + widgets[name].getStart()
 					      + ",<br /> old bottom: " + timeline.getSize()
-					      + ", topPositionRatio: <br />" + widgets[name].getTopPositionRatio()
+					      + ", startPositionRatio: <br />" + widgets[name].getStartPositionRatio()
 					      + ",<br /> newTopW: " + newTopW
 					      + ",<br /> newTopChangeW: " + newTopChangeW);
 				      */
 
-				      // widgets[name].setTop(newTopChangeW);
+				      // widgets[name].setStart(newTopChangeW);
 				  }
 
 			      }

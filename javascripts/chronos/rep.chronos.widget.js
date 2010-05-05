@@ -37,36 +37,37 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var isManager            = options.isManager           || false;     // Determines whether this widget is the 'boss' of the other widgets in the global timeline.
     var managerStP           = 0;                                        // Set after initialization based on whether or not this is a manager.
 
-    // Holds top positioning and tile height for monitoring and re-calculating
-    var widgetTop         = null;      // Must be initialized
-    var topChange         = null;      // Must be initialized
+    // Holds start edge positioning and tile height for monitoring and re-calculating
+    // var startChange       = null;      // Must be initialized
 
     // Passed in by 'holder' class
     var timelineSize      = null;
-    var timelineDir       = null;
+    var orientation       = null;
+
+    // These two are holders for 'top' vs. 'left,' and 'width' vs. 'height':
+    var startEdgeName          = null;
+    var volumeDimensionName    = null;
+    var volumeDimensionInvName = null;  // The inverse of volumeDimensionName ( height <-> width )
+
 
     // Our global seconds-to-pixels ratio used for both dragging ratio with other columns as well as generating new tiles:
-    var secondsToPixels   = 0;
-    var oldSecondsToPixels = 0;  // For scaling purposes
+    var secondsToPixels        = 0;
+    var oldSecondsToPixels     = 0;  // For scaling purposes
 
     // We initialize bottomDate by decrementing in *reverse* of 
     // how it is incremented in tile function to assure we have
     // the correct value when we start in that function.
-    var topDate              = dataModel.addToDate(intervalName, startDate, 1);
-    var bottomDate           = startDate;
+    var topDate                = dataModel.addToDate(intervalName, startDate, 1);
+    var bottomDate             = startDate;
 
     // For saving change when this widget or others are dragged:
-    var pixelDragChange      = 0;
+    var pixelDragChange        = 0;
 
     // Decimal remainder saved between updates to top value:
-    var topSetValueRemainder = 0;
+    var startSetValueRemainder = 0;
 
-    // This starts at zero.
-    var originalTop          = 0;
-    var masterTop            = 0;
-
-    var topPositionRatio     = 0;
-    var bottomPositionRatio  = 0;
+    var startPositionRatio     = 0;
+    var endPositionRatio       = 0;
 
     /*
      * Utility function to generate consistent naming for model class:
@@ -82,11 +83,21 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    self.initialize = function (initTimelineSize, initTimelineDir) {
+    self.initialize = function (initTimelineSize, initOrientation) {
 
-	// Passed in from 'holder' class
+	// Set instance properties:
 	timelineSize = initTimelineSize;
-	timelineDir  = initTimelineDir;
+	orientation = initOrientation;
+
+	if (orientation == 'vertical') {
+	    startEdgeName = 'top';
+	    volumeDimensionName = 'width';
+	    volumeDimensionInvName = 'height';
+	} else {
+	    startEdgeName = 'left';
+	    volumeDimensionName = 'height';
+	    volumeDimensionInvName = 'width';
+	}
 
 	// Hmm...bit of a hack to make sure that decades start with the '0' of the decade...
 	// otherwise a bunch of stuff gets messed up:
@@ -115,15 +126,28 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var mainWidgetElement = $('<div />').appendTo($(selector));
 	mainWidgetElement.attr('id', widgetSelector.replace(/^#/, '')).addClass('tWidget');
 
-	// Set width based on configuration value:
-	$(widgetSelector).css('width', volumePercentage + "%");
+	if (isManager) {
+	    mainWidgetElement.addClass('manager');
+	}
+
+	// Set height (if vertical orientation) or width (if horizontal orientation) based on configuration value:
+	$(widgetSelector).css(volumeDimensionName, volumePercentage + "%");
 
 	// if we don't set this to initialize we just get 'auto' and it throws everything off.
-	$(widgetSelector).css('top', '0px');
+	$(widgetSelector).css(startEdgeName, '0px');
 
 	// Now, generate our first tile.  We use this to center the widget and then build the rest of the tiles.
-	var initialTileSize = self.tile('up');
+	self.tile('up');
 
+
+        /* ASK BRETT ABOUT SMARTEST WAY TO DO THIS!? */
+	// If we don't do this when we are oriented horizontally, then we get layout problems with enclosed block elements wrapping.
+	if (orientation == 'horizontal') {
+	    self.setSize();
+	}
+        /* END ASK BRETT... */
+
+	//alert(self.getSize());
 
 	/*
 	 *  This is where we center the column by figuring out:
@@ -142,14 +166,27 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 */
 
 	widgetOffset = Math.ceil(timelineSize / 2 + (dataModel.getSubIntervalDiff(startDate, subIntervalName) / secondsToPixels));
-	$(widgetSelector).css('top', (widgetOffset + 'px'));     // CSS CHANGE HERE
+	$(widgetSelector).css(startEdgeName, (widgetOffset + 'px'));     // CSS CHANGE HERE
 
+/*
+	alert('timelineSize = ' + timelineSize);
+	alert('self.getSize() = ' + self.getSize());
+*/
 	// Needed for scaling:
-	topPositionRatio    = self.getTop() / self.getSize();
-	bottomPositionRatio = (self.getTop() + timelineSize) / self.getSize();
+	startPositionRatio  = self.getStart() / self.getSize();
+	endPositionRatio    = (self.getStart() + timelineSize) / self.getSize();
 
 	self.checkTiles();
 	self.drawEvents();
+
+	// Need to do this every time after checking tiles for horizontal orientation:
+	if (orientation == 'horizontal') {
+	    self.setSize();
+	}
+/*
+	alert('timelineSize = ' + timelineSize);
+	alert('self.getSize() = ' + self.getSize());
+*/
     };
 
 
@@ -220,9 +257,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Maybe not, we may want to divide years into quarters, not months...etc.?)
 
 	var newSubIntervalSize = dataModel.getSecondsInInterval(currentDate, subIntervalName) / secondsToPixels;
-
 	var subIntervalCount   = dataModel.getIntervalCount(currentDate, subIntervalName);
-
 
 	/*
 	 * -generate/clone tile based on heading plus count of sub-intervals.
@@ -235,14 +270,22 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Add more generic classes for general CSS manipulation:
 	thisModelElement.addClass('tModel').addClass(intervalName + 'Model');
 
+	if (orientation == 'horizontal') {
+	    thisModelElement.addClass('tModel_float');
+	}
+
 	// Now we add the container for sub-interval elements (if interval = year, sub-interval = month, etc.):
 	var thisSubIntervalContainerElement = $('<ul />').appendTo(thisModelElement).addClass(uniqueModelClass);
+
+	if (orientation == 'horizontal') {
+	    thisSubIntervalContainerElement.addClass('oneTile_float');
+	}
 
 	// Same as above, add generic classes for CSS manipulation, but to sub-interval container:
 	thisSubIntervalContainerElement.addClass('one' + intervalName.slice(0, 1).toUpperCase() + intervalName.replace(/^\w{1}/, '')).addClass('oneTile');
 
 	var subIntervalElement         = $();
-	var subIntervalHeightRemainder = 0;
+	var subIntervalVolumeDRemainder = 0;
 
 	/*
 	 * -generate html for, and set height of sub-interval html
@@ -257,24 +300,31 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    subIntervalElement.addClass((i + 1).toString());
 	    subIntervalElement.find('span').addClass('marker');
 
+	    if (orientation == 'vertical') {
+		subIntervalElement.find('.marker').width('100%');
+	    } else if (orientation == 'horizontal') {
+		subIntervalElement.addClass('ot_horizontal');
+		subIntervalElement.find('.marker').height('100%');
+	    }
+
 	    // Lets us do labeling differently for first one...may want to add other classes like this one for different criteria?
 	    if (i == 0) { subIntervalElement.find('span').addClass('first'); }
 
 	    // Add simple label:
 	    subIntervalElement.find('span').html((i + 1).toString());
 
-	    // Now, we have to keep the decimal remainder and add it to the previous value...then add that to the height, and take the decimal remainder
+	    // Now, we have to keep the decimal remainder and add it to the previous value...then add that to the <volumeD> (height or width), and take the decimal remainder
 	    var thisDecimal = newSubIntervalSize - parseInt(newSubIntervalSize);                              // Splits off decimal value
-	    subIntervalHeightRemainder += thisDecimal;                                                        // We add to previous remainder...
-	    var thisSubIntervalHeight = parseInt(newSubIntervalSize) + parseInt(subIntervalHeightRemainder);  // ...then we see if we have a > 1 value, and add that to the integer value of calculated height.
-	    subIntervalHeightRemainder = subIntervalHeightRemainder - parseInt(subIntervalHeightRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
+	    subIntervalVolumeDRemainder += thisDecimal;                                                        // We add to previous remainder...
+	    var thisSubIntervalVolumeD = parseInt(newSubIntervalSize) + parseInt(subIntervalVolumeDRemainder);  // ...then we see if we have a > 1 value, and add that to the integer value of calculated <volumeD>.
+	    subIntervalVolumeDRemainder = subIntervalVolumeDRemainder - parseInt(subIntervalVolumeDRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
 
 	    // NOW, we can set the height of sub-interval element:
-	    subIntervalElement.css(timelineDir, (thisSubIntervalHeight + 'px'));
+	    subIntervalElement.css(volumeDimensionInvName, (thisSubIntervalVolumeD + 'px'));
 	}
 
 	// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
-	thisSubIntervalContainerElement.addClass(subIntervalHeightRemainder.toString());
+	thisSubIntervalContainerElement.addClass(subIntervalVolumeDRemainder.toString());
 
 
 	/* MAKE LABELING BETTER */
@@ -298,33 +348,14 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	/* END MAKE LABELING BETTER */
 
 
-	/*
-	 * -set top position based on addition of tiles
-	 */
-
-	// Adjust top if we are going up ?
-	// parseFloat is just used to chop off 'px' ?
-	//alert(widgetSelector + ' top = ' + $(widgetSelector).css('top'));
-	//alert(thisSubIntervalContainerElement.height());
-	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px');
-	//alert( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px');
-
-
 	// HERE WE SET THE TOP POSITION OF THIS WIDGET/COLUMN
 	if (tileDir == 'up') {
-	    $(widgetSelector).css('top', ( parseFloat($(widgetSelector).css('top')) - parseFloat(thisSubIntervalContainerElement.height()) + 'px'));
+	    var containerElementSize = thisSubIntervalContainerElement[volumeDimensionInvName]();
+	    $(widgetSelector).css(startEdgeName, ( parseFloat($(widgetSelector).css(startEdgeName)) - parseFloat(containerElementSize) + 'px'));
 	}
 
-	// OLD CODE FOR THIS
-
-	// Can we do this all at once along with updating positioning at the end of this function?
-	// Splitting it up like this right now follows the old tiling method...
-	// $(selector).css('top', (-1 * (thisSubIntervalContainerElement.height()) + 'px'));  // CSS CHANGE HERE
-
-	// alert(dataModel.getSubDate(currentDate, intervalName) + ': ' + thisSubIntervalContainerElement.height());
-
 	// Return height of the tile generated.  Should return something else?
-	return (parseInt(thisSubIntervalContainerElement.height()));
+	return (parseInt(thisSubIntervalContainerElement[volumeDimensionInvName]()));
     };
 
 
@@ -337,7 +368,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// We have to regenerate all the heights properly using same remainder mechanism as before:
 	// (can we make this into a function which we use in both places?)
 
-	var subIntervalHeightRemainder = 0;
+	var subIntervalVolumeDRemainder = 0;
 
 	$(widgetSelector + ' .oneTile').each(
 	    function () {
@@ -356,18 +387,19 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 			// Now, we have to keep the decimal remainder and add it to the previous value...then add that to the height, and take the decimal remainder
 			var thisDecimal = newSubIntervalSize - parseInt(newSubIntervalSize);                              // Splits off decimal value
-			subIntervalHeightRemainder += thisDecimal;                                                        // We add to previous remainder...
-			var thisSubIntervalHeight = parseInt(newSubIntervalSize) + parseInt(subIntervalHeightRemainder);  // ...then we see if we have a > 1 value, and add that to the integer value of calculated height.
-			subIntervalHeightRemainder = subIntervalHeightRemainder - parseInt(subIntervalHeightRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
+			subIntervalVolumeDRemainder += thisDecimal;                                                        // We add to previous remainder...
+			var thisSubIntervalHeight = parseInt(newSubIntervalSize) + parseInt(subIntervalVolumeDRemainder);  // ...then we see if we have a > 1 value, and add that to the integer value of calculated height.
+			subIntervalVolumeDRemainder = subIntervalVolumeDRemainder - parseInt(subIntervalVolumeDRemainder);   // We then make sure to save the remainder *minus* any > 1 value we have (just decimal).
 
 			// NOW, we can set the height of sub-interval element:
-			$(this).css(timelineDir, (thisSubIntervalHeight + 'px'));
+
+                        $(this).css(volumeDimensionInvName, (thisSubIntervalHeight + 'px'));
 		    }
 		);
 
 		// USING THIS!?
 		// Finally, we want to make sure we are saving the remainder for the next tile below (better way to do this?):
-		// thisSubIntervalContainerElement.addClass(subIntervalHeightRemainder.toString());
+		// thisSubIntervalContainerElement.addClass(subIntervalVolumeDRemainder.toString());
 	});
 
 	return true;
@@ -421,20 +453,20 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 * 
 	 */
 
-	var checkTop    = parseFloat($(widgetSelector).css('top')) * -1;    // top offset of widget, negated
-	var checkHeight = parseFloat($(widgetSelector).height());      // height of widget
+	var checkStart  = parseFloat($(widgetSelector).css(startEdgeName)) * -1;    // top offset of widget, negated
+	var checkVolumeInvD = parseFloat($(widgetSelector)[volumeDimensionInvName]());      // height of widget
 
-	var tileFactor  = 0;                                      // Only used when tiling 'non-manager' column, represents how many tiles we need in proportion to 'manager' column
-	var upTest, downTest;                                     // Hold functions which return boolean values based on positioning/height tests
+	var tileFactor  = 0;   // Only used when tiling 'non-manager' column, represents how many tiles we need in proportion to 'manager' column
+	var upTest, downTest;  // Hold functions which return boolean values based on positioning/ height/width tests
 
 	if (isManager) {  // If this widget is the 'manager' of other widgets we just tile based on global timeline size.
 
 	    // (up) if this widget size is less than total timeline size
-	    upTest     = function () { return (checkTop <= timelineSize); };
+	    upTest     = function () { return (checkStart <= timelineSize); };
 
 	    // (down) if this widget's top offset (a negative value) + timeline size substracted from its height
 	    //   is less than the total timeline size
-	    downTest   = function () { return ((checkHeight - (checkTop + timelineSize)) <= timelineSize); };
+	    downTest   = function () { return ((checkVolumeInvD - (checkStart + timelineSize)) <= timelineSize); };
 
 	} else {
 
@@ -450,11 +482,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	    // (up) if this widget size is less than the size of (basically) a tile * calculated tilefactor
 	    //   (the amount of "manager's" tiles that fit in the timeline, plus one for good measure...)
-	    upTest     = function () { return (checkTop <= pixelsScrolled); };
+	    upTest     = function () { return (checkStart <= pixelsScrolled); };
 
 	    // (down) same calculation as for "manager," downTest, but in this case, we are again referencing the "manager's" tile size * tilefactor
 	    //   as opposed to global timeline size:
-	    downTest   = function () { return ((checkHeight - (checkTop + timelineSize)) < pixelsScrolled); };
+	    downTest   = function () { return ((checkVolumeInvD - (checkStart + timelineSize)) < pixelsScrolled); };
 	}
 
 	var testInc = 0;
@@ -463,12 +495,12 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var datesTiled = new Array();
 
 	while (upTest() && testInc < testIncTest) {
-	    checkTop += self.tile('up');
+	    checkStart += self.tile('up');
             datesTiled.push(topDate);
 
 	    // These need to be adjusted by the last *tile* size not the sub-interval height value.
 	    if (!isManager) {
-		widgetOffset -= checkTop;
+		widgetOffset -= checkStart;
 	    }
 
 	    testInc++;
@@ -476,20 +508,20 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// This happens afterwards 'cause we may have changed the non-manager columns?
 	if (!isManager) {
-	    checkHeight = parseFloat($(widgetSelector).height());   // height of entire column
-	    checkTop = (widgetOffset * -1); // top offset of Timeline
+	    checkVolumeInvD = parseFloat($(widgetSelector)[volumeDimensionInvName]());   // height of entire column
+	    checkStart = (widgetOffset * -1); // top offset of Timeline
 	}
 
 	var testInc = 0;
 
 	while (downTest() && testInc < testIncTest) {
-	    checkHeight += self.tile('down');
+	    checkVolumeInvD += self.tile('down');
             datesTiled.push(bottomDate);
 
 	    if (!isManager) {
 		tileFactor -= 1;
 	    } else {
-		// checkHeight += subIntervalHeight; ??
+		// checkVolumeD += subIntervalHeight; ??
 	    }
 
 	    testInc++;
@@ -526,7 +558,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var iconWidth   = 20;
 	var switchDir   = false;
 
-	var widgetWidth = $(widgetSelector).width();
+	var widgetWidth = $(widgetSelector)[volumeDimensionName]();
 	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
 
 	// This regexp is used to match on the class we generate from the date to place in tiles.
@@ -576,15 +608,15 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			//$("#dataMonitor #dates span.data").append("events result length: " + events.length + "<br />");
 
 
-			var parentHeight = parseInt($(element).height());
+			var parentHeight = parseInt($(element)[volumeDimensionInvName]());
 
 			//$("#dataMonitor #dates span.data").append("<ul>");
 
 			for (var i = 0, j = events.length; i < j; i++) {
 
-			    var topPosition = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
+			    var startPosition = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
 
-			    var topPosPercentage = (topPosition / parentHeight) * 100;
+			    var topPosPercentage = (startPosition / parentHeight) * 100;
 
 			    // Debugging
 
@@ -592,7 +624,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    $("#dataMonitor #dates span.data").append(
 				"<li>" + events[i].id + ': ' + events[i].start.toString() + ", "
 				    + dataModel.getIntervalInSeconds(tileStartDate, events[i].start) + " ... "
-				    + topPosition + "</li>"
+				    + startPosition + "</li>"
 			    );
 */
 
@@ -628,23 +660,45 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 				var class_regex = / /g;
 
-				$(element).append(
-				    "<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-				    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
-					+ " id='event-" + events[i].id + "'"
-					+ " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-					+ " margin-top: -10px; top: " + topPosPercentage + "%' title='" + events[i].title + "'"
-					+ " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
-					+ " alt='" + $(element).attr('class') + "'/>"
-				);
+				if (orientation == 'vertical') {
+				    $(element).append(
+					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
+					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
+					    + " id='event-" + events[i].id + "'"
+					    + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
+					    + " margin-top: -10px; top: " + topPosPercentage + "%' title='" + events[i].title + "'"
+					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
+					    + " alt='" + $(element).attr('class') + "'/>"
+				    );
+				} else {
+				    $(element).append(
+					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
+					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
+					    + " id='event-" + events[i].id + "'"
+					    + " style='position:absolute; z-index:3; top:" + leftPosition + "px;"
+					    + " margin-left: -10px; left: " + topPosPercentage + "%' title='" + events[i].title + "'"
+					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
+					    + " alt='" + $(element).attr('class') + "'/>"
+				    );
+				}
 			    } else if (eventViewType == 'density') {
-				$(element).append(
-				    "<img src='javascripts/chronos/img/event-density.png'"
-					+ " class='eDensity'"
-					+ " id='density-" + (events[i].id) + "'"
-					+ " style='position:absolute; z-index:3; width:100%; left:0;"
-					+ " margin-top:-20px; top:" + topPosPercentage + "%;' />"
-				);
+				if (orientation == 'vertical') {
+				    $(element).append(
+					"<img src='javascripts/chronos/img/event-density.png'"
+					    + " class='eDensity'"
+					    + " id='density-" + (events[i].id) + "'"
+					    + " style='position:absolute; z-index:3; width:100%; left:0;"
+					    + " margin-top:-20px; top:" + topPosPercentage + "%;' />"
+				    );
+				} else {
+				    $(element).append(
+					"<img src='javascripts/chronos/img/event-density.png'"
+					    + " class='eDensity'"
+					    + " id='density-" + (events[i].id) + "'"
+					    + " style='position:absolute; z-index:3; height:100%; top:0;"
+					    + " margin-left:-20px; left:" + topPosPercentage + "%;' />"
+				    );
+				}
 			    }
 			}
 
@@ -692,22 +746,22 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	return oldSecondsToPixels;
     };
 
-    self.getTopPositionRatio = function () {
-	return topPositionRatio;
+    self.getStartPositionRatio = function () {
+	return startPositionRatio;
     };
 
-    self.resetTopPositionRatio = function () {
-	topPositionRatio = ( self.getTop() / self.getSize() ) * -1;
-	return topPositionRatio;
+    self.resetStartPositionRatio = function () {
+	startPositionRatio = ( self.getStart() / self.getSize() ) * -1;
+	return startPositionRatio;
     };
 
-    self.getBottomPositionRatio = function () {
-	return bottomPositionRatio;
+    self.getEndPositionRatio = function () {
+	return endPositionRatio;
     };
 
-    self.resetBottomPositionRatio = function () {
-	bottomPositionRatio = ( (self.getTop() - timelineSize) / self.getSize() ) * -1;
-	return bottomPositionRatio;
+    self.resetEndPositionRatio = function () {
+	endPositionRatio = ( (self.getStart() - timelineSize) / self.getSize() ) * -1;
+	return endPositionRatio;
     };
 
     self.getDragChange = function () {
@@ -720,31 +774,51 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
     self.getSize = function () {
-	return parseFloat($(widgetSelector).height());
+	return parseFloat($(widgetSelector)[volumeDimensionInvName]());
     };
 
-    self.getTop = function () {
-	return parseFloat($(widgetSelector).css('top'));
+    self.setSize = function () {
+	var widgetSize = 0;
+
+	$(widgetSelector).find('.tModel').each(
+	    function() {
+		//alert($(this).attr('class') + ' width is ' + $(this)[volumeDimensionInvName]());
+		var markerWidth = 0;
+		if (self.isManager) {
+		    //markerWidth = $(this).find('li .marker').width();  // This isn't working.  Clearly the marker is the problem, but I'm not sure how much to add to make it nice.
+		}
+		widgetSize += ($(this)[volumeDimensionInvName]() + markerWidth);
+		//widgetSize += ($(this)[volumeDimensionInvName]() + 2000);  // testing
+	    }
+	);
+
+	$(widgetSelector)[volumeDimensionInvName](widgetSize);
+
+	return widgetSize;
     };
 
-    self.setTop = function (topChange) {
-	var checkTop = parseFloat($(widgetSelector).css('top'));
-	var adjustedTopChange = topChange + topSetValueRemainder;
-	var adjustedTopChangeNoDecimal = adjustedTopChange;
-	topSetValueRemainder = adjustedTopChange - adjustedTopChangeNoDecimal;
+    self.getStart = function () {
+	return parseFloat($(widgetSelector).css(startEdgeName));
+    };
 
-	var topSetValue = (checkTop - adjustedTopChangeNoDecimal);
+    self.setStart = function (startChange) {
+        var checkStart = parseFloat($(widgetSelector).css(startEdgeName));
 
-	//// $("#dataMonitor #thisWidgetTopStuff span.data").html(widgetSelector + ': topSetValueRemainder is ' + topSetValueRemainder);
+	var adjustedStartChange = startChange + startSetValueRemainder;
+	var adjustedStartChangeNoDecimal = adjustedStartChange;
+	startSetValueRemainder = adjustedStartChange - adjustedStartChangeNoDecimal;
+
+	var startSetValue = (checkStart - adjustedStartChangeNoDecimal);
 
 	// A little hack to let this function handle animation too...
 	if (arguments[1] == true) {
-	    $(widgetSelector).animate({"top": topSetValue + 'px'}, 500);
+	    var animate_options = {};
+	    animate_options[startEdgeName] = startSetValue + 'px';
+	    $(widgetSelector).animate(animate_options, 500);
 	} else {
-	    $(widgetSelector).css('top', topSetValue + 'px');  // CSS CHANGE HERE
+	    $(widgetSelector).css(startEdgeName, startSetValue + 'px');  // CSS CHANGE HERE
 	}
     };
-
 
 
     // Should (DateTime) Events have their own class?

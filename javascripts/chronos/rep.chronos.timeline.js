@@ -23,18 +23,22 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     // DEFAULTS
     var defaults = {
-	startDate:        'Jan 01, 1984 00:00:00',
-	timelineDir:      'height',                        // What direction should this timeline be (options: height or width):
-	timelineSize:     null,                            // -NEEDS INITIALIZATION
-	tileOffset:       -2,                              // How many tiles back do we pull? (to precache upward)
+	startDate:           'Jan 01, 1984 00:00:00',
+	orientation:         'horizontal',                      // What direction should this timeline be (options: vertical or horizontal):
+        volumeDimensionVal:  300,
+	timelineSize:        null,                            // -NEEDS INITIALIZATION
+	tileOffset:          -2,                              // How many tiles back do we pull? (to precache upward)
 
 	// THESE FOR (UI) EVENTS (initiateTileEvents)
-	mouseY:           0,
-	mouseX:           0,
-	wasMouseY:        0,
+	mouseY:              0,
+	mouseX:              0,
+	wasMouseY:           0,
+	wasMouseX:           0,
+
+	// DIRECTIONALITY HERE!
 
 	// Used by Scaler:
-	perp:             'width'                          // What is the perpendicular?
+	perp:                'width'                          // What is the perpendicular?
     };
 
 
@@ -49,10 +53,18 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	// We used to start with mainSelector like this, but then when moving it to a jQuery plugin,
 	// we have to add this because of all the code that assumes its existence.  CLEAN UP.
 	mainSelector = "#" + mainSelector;
+	$(mainSelector).addClass('chronos_' + defaults.orientation);
 
+	// DIRECTIONALITY HERE!
 
-	// CHANGED FROM PARSEDFLOAT TO PARSEINT
-	defaults.timelineSize    = parseInt($(mainSelector).css(defaults.timelineDir));  // Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
+	// Should be set vs. pulled from CSS?   Right now, 'timelineContainer' is set to 100%, so moves w/browser (sorta)
+	if (defaults.orientation == 'vertical') {
+	    $(mainSelector).width(defaults.volumeDimensionVal + 'px');
+	    defaults.timelineSize = parseInt($(mainSelector).css('height'));
+	} else {
+	    $(mainSelector).height(defaults.volumeDimensionVal + 'px');
+	    defaults.timelineSize = parseInt($(mainSelector).css('width'));
+	}
 
 
 	// START BUILDING TIMELINE
@@ -67,6 +79,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	// Associates mouse events with global variables...needed?
 	self.mousePrePos();
 
+
 	widgets.decadesWidget = repertoire.chronos.widget(mainSelector, {
 							      startDate:           defaults.startDate,
 							      volumePercentage:    '30',
@@ -77,6 +90,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 						              intervalsVisible:    .5,
 							      eventViewType:       'density'
 							  }, dataModel);
+
 
 	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
 							    startDate:           defaults.startDate,
@@ -113,22 +127,24 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	managerWidget = self.getManager();
 
-	managerWidget.initialize(defaults.timelineSize, defaults.timelineDir);
+	managerWidget.initialize(defaults.timelineSize, defaults.orientation);
 	managerStP = widgets[name].getSecondsToPixels();
 
 	// We loop again to set managerStP...better way to do this?
 	for (name in widgets) {
 	    if (!widgets[name].isManager()) {
 		widgets[name].setManagerStP(managerStP);
-		widgets[name].initialize(defaults.timelineSize, defaults.timelineDir);
+		widgets[name].initialize(defaults.timelineSize, defaults.orientation);
 	    }
 	}
 
 	self.initiateTileEvents();
 
+/*
  	var scaler = repertoire.chronos.scaler('#scaler',{ scalerViewWidget: 'yearsWidget' }, self, widgets);
 	scaler.initialize();
 	scaler.initiateScalerEvents();
+*/
     };
 
 
@@ -161,10 +177,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
      * Initiates and sets proper behavior (proper synchronization during and when stopping) for dragging.
      */
     self.initiateTileEvents = function () {
-	$(mainSelector).mousedown(
-	    function() {
-		defaults.wasMouseY = defaults.mouseY;
-	    });
+	$(mainSelector).mousedown( self.updateMousePos );
 
 	// Something in here actually seems to "kick" the tiles into the right position...
 
@@ -179,7 +192,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	    widgetDragFunctions[name] = function (event, ui) {
 		var thisEventWidget = self.getWidgetWithSelector(ui.helper.attr('id'));
 
-		thisEventWidget.setDragChange(defaults.wasMouseY - defaults.mouseY);
+		thisEventWidget.setDragChange( self.getMouseDiff() );
 
 		var secondsMoved = thisEventWidget.getSecondsToPixels() * thisEventWidget.getDragChange();
 		var pixelsToMove = 0;
@@ -197,7 +210,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    pixelsToMove = secondsMoved / widgets[name].getSecondsToPixels();
 		    $("#dataMonitor #pixelsToMove span.data").html(name + ": " + pixelsToMove);
 
-		    widgets[name].setTop(pixelsToMove);
+		    widgets[name].setStart(pixelsToMove);
 
 		    // trying to figure out less costly algorithm for generating tiles...this ain't it...
 		    // if (pixelsToMove > 50) {
@@ -206,8 +219,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 		}
 
-		defaults.wasMouseY = defaults.mouseY;  // Memory for mouse position
-		
+		self.updateMousePos(); // Memory for mouse position
 	    };
 
 	    widgetStopFunctions[name] = function (event, ui) {
@@ -220,6 +232,11 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    // methodology.
 		    var datesTiled = widgets[name].checkTiles();
 
+		    // Need to do this every time after checking tiles for horizontal orientation:
+		    if (defaults.orientation == 'horizontal') {
+			widgets[name].setSize();
+		    }
+
 		    for (var d = 0; d < datesTiled.length; d++) {
 			widgets[name].drawEvents(datesTiled[d]);
 		    }
@@ -227,20 +244,28 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 		    // This needs to be reset for all since movement will change ratio:
 		    // (and it must happen after checkTiles(), since that will alter
 		    //  the top and size of the the widget!)
-		    widgets[name].resetTopPositionRatio();
-		    widgets[name].resetBottomPositionRatio();
+		    widgets[name].resetStartPositionRatio();
+		    widgets[name].resetEndPositionRatio();
 		}
 	    };
 
 	    var thisWidget = widgets[name];
 
- 	    $(thisWidget.getSelector()).draggable({
-						      axis: 'y',
-						      drag: widgetDragFunctions[name],
-						      stop: widgetStopFunctions[name]
-						  });
+	    var draggable_config = {
+		drag: widgetDragFunctions[name],
+		stop: widgetStopFunctions[name]
+	    };
+
+	    if (defaults.orientation == 'vertical') {
+		draggable_config['axis'] = 'y';
+	    } else {
+		draggable_config['axis'] = 'x';
+	    }
+
+ 	    $(thisWidget.getSelector()).draggable( draggable_config );
 	}
     };
+
 
 
     /********************************************************************************************
@@ -252,25 +277,28 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	return defaults.timelineSize;
     };
 
-    self.getDir = function () {
-	return defaults.timelineDir;
+    self.getOrientation = function () {
+	return defaults.orientation;
     };
 
     self.getPerp = function () {
 	return defaults.perp;
     };
 
-    self.getMouseDiff = function () {
-	return defaults.wasMouseY - defaults.mouseY;
+    self.getMouseDiff   = {};
+    self.updateMousePos = {};
+    self.getMousePos    = {};
+
+    if (defaults.orientation == 'vertical') {
+	self.getMouseDiff   = function () { return defaults.wasMouseY - defaults.mouseY; };
+	self.updateMousePos = function () { defaults.wasMouseY = defaults.mouseY; };
+	self.getMousePos    = function () { return defaults.mouseY; };
+    } else {
+	self.getMouseDiff   = function () { return defaults.wasMouseX - defaults.mouseX; };
+	self.updateMousePos = function () { defaults.wasMouseX = defaults.mouseX; };
+	self.getMousePos    = function () { return defaults.mouseX; };
     };
 
-    self.updateMousePos = function () {
-	defaults.wasMouseY = defaults.mouseY;
-    };
-
-    self.getMousePos = function () {
-	return defaults.mouseY;
-    };
 
     /* ADDED WHEN RE-BUILDING SCALER -DD, 03/02/10 */
     /* These two only used in scaler.  Can be replaced/removed at some point? */
