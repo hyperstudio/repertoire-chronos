@@ -23,9 +23,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     // DEFAULTS
     var defaults = {
-	startDate:           'Jan 01, 1984 00:00:00',
-	orientation:         'horizontal',                      // What direction should this timeline be (options: vertical or horizontal):
-        volumeDimensionVal:  300,
+	startDate:           options['startDate']   || 'Jan 01, 1984 00:00:00',
+	orientation:         options['orientation'] || 'vertical',   // What direction should this timeline be (options: vertical or horizontal):
+        volumeDimensionVal:  350,
 	timelineSize:        null,                            // -NEEDS INITIALIZATION
 	tileOffset:          -2,                              // How many tiles back do we pull? (to precache upward)
 
@@ -101,7 +101,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 /*  IN PROGRESS.
 	widgets.monthsWidget = repertoire.chronos.widget(mainSelector, {
 							     startDate:           defaults.startDate,
-							     volumePercentage:    '10',
+							     volumePercentage:    '20',
 							     widgetSelector:      '#timelineMonths',
 							     intervalName:        'month',
 							     subIntervalName:     'day',
@@ -139,6 +139,41 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	scaler.initialize();
 	scaler.initiateScalerEvents();
 
+	var eventList = repertoire.chronos.eventListWidget(mainSelector, {
+							       startDate:        defaults.startDate,
+							       volumeSize:       '300',
+							       widgetSelector:   '#eventList'
+							   }, dataModel);
+
+	eventList.initialize(defaults.timelineSize, defaults.orientation);
+	eventList.initiateListUIEvents(event_click_callback);
+    };
+
+
+    var event_click_callback = function () {
+
+	// Get rid of all the old highlighted ones first:
+	$('.highlight_event').removeClass('highlight_event');
+	$('.highlight_event_li').removeClass('highlight_event_li');
+
+	$(this).addClass('highlight_event_li');
+
+	var thisDatetimeEvent = dataModel.getEventWithID($(this).attr('id'));
+	if (thisDatetimeEvent) {
+	    for (name in widgets) {
+		// 1) get date for top/left position of widget
+		// 2) find second difference (pos/neg) between top/left position of widget and date for event that was clicked on
+		var startMove = (dataModel.getIntervalInSeconds(widgets[name].getStartDate(), thisDatetimeEvent.start) / widgets[name].getSecondsToPixels()) - (defaults.timelineSize / 2);
+
+		// 3) update top position of widget with that value (animate)
+		widgets[name].setStart(startMove, true);
+	    }
+
+	    $('#event-' + thisDatetimeEvent.id).addClass('highlight_event');
+
+	} else {
+	    alert('failed?');
+	}
     };
 
 

@@ -34,6 +34,7 @@
 	     'chronos/rep.chronos.model.js',
 	     'chronos/rep.chronos.timeline.js',
 	     'chronos/rep.chronos.widget.js',
+	     'chronos/rep.chronos.eventListWidget.js',
 	     'chronos/rep.chronos.scaler.js'
 	 ];
 
@@ -72,6 +73,8 @@
 		 var modelOptions       = {};
 		 modelOptions['params'] = {};
 
+		 var timelineOptions    = {};
+
 		 if (config != null) {
 		     if (config.data_url != null) {
 			 modelOptions.params['url'] = config.data_url;
@@ -98,6 +101,15 @@
 		     } else {
 			 // modelOptions['dateFormat'] = dateFormat: 'yyyy-MM-ddTHH:mm:ss-04:00', // can't figure out format specifier for '-04:00' ?
 		     }
+
+                     if (config.orientation != null) {
+                         timelineOptions['orientation'] = config.orientation;
+		     }
+
+                     if (config.startDate != null) {
+                         timelineOptions['startDate'] = config.startDate;
+		     }
+
 		 } else {
 		     // Shouldn't be hard-coded.  Should just throw an error if we don't have these args.
 		     modelOptions.params['url'] = "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
@@ -115,7 +127,7 @@
 
 		 // BUILD TIMELINE:
 
- 		 var timeline = repertoire.chronos.timeline($this.attr('id'), null, thisModel);  // kinda stupid since we turn this ( $this.attr('id') ) back into a jQuery object...
+ 		 var timeline = repertoire.chronos.timeline($this.attr('id'), timelineOptions, thisModel);  // kinda stupid since we turn this ( $this.attr('id') ) back into a jQuery object...
 		 timeline.initialize();   // Must be called first: builds Timeline
 
 		 // Make sure floats get reset, without sloppy markup

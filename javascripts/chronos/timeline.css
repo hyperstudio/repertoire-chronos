@@ -72,6 +72,7 @@ div.chronos_horizontal #topArrow {left:-9px; border-right:1px solid #E2F2FF;}
 div.chronos_vertical #botArrow {bottom:-9px; border-top:1px solid #E2F2FF; background-position:center -9px;}
 div.chronos_horizontal #botArrow {right:-9px; border-left:1px solid #E2F2FF; background-position:-9px center;}
 
+
 .clear {clear:both;}
 
 /* Non-Timeline Styles */
@@ -100,3 +101,16 @@ div#gs { float: left; margin: 20px; padding: 20px; border: 2px solid light blue;
 #dataMonitor span.dataTitle { font-weight: bold; color: #f85; }
 
 div#eventListing span.data span.title, div#eventListing span.data span.id, div#eventListing span.data span.date { font-weight: bold; }
+
+
+
+/* Event List Styles (Note that it is *OUTSIDE* of main chronos div) */
+
+div#eventList { display:block; float:left; border-right:1px solid black; border-left:1px solid black; position:relative;}
+div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 50px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
+div#eventList ul.eventList { background-color: #FDF5E6 }
+
+.highlight_event { border:2px solid #FF9912; }
+.highlight_event_li { background-color: #FFD39B; }
+.highlight_event_over { background-color: #FFEC8B; }
+.highlight_event_li_over { background-color: #FFEC8B; }

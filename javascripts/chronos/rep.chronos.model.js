@@ -297,6 +297,13 @@ repertoire.chronos.model = function(options) {
 	}
 
 	self.update();
+
+	// Clean ids...sometimes have spaces?
+	for (var i = 0; i < self.data.length; i++) {
+	    if (typeof(self.data[i].id) == 'string' && self.data[i].id.match(/^\s/)) {
+		self.data[i].id = self.data[i].id.replace(/^\s*/, '');
+	    }
+	}
     };
 
 
@@ -569,6 +576,25 @@ repertoire.chronos.model = function(options) {
 
 	var eventDistance = new TimeSpan(eventDate - startDate);
 	return eventDistance.getTotalMilliseconds() / 1000;
+    };
+
+
+    /**
+     * @function
+     * @param {Number} id
+     * @description
+     *   Returns the Date object with the given id
+     * @returns {Date}
+     */
+    self.getEventWithID = function (id) {
+
+	// Real basic.
+	for (var i = 0, j = self.data.length; i < j; i++) {
+	    if (self.data[i].id == id)
+		return self.data[i];
+	}
+
+	return false;
     };
 
 

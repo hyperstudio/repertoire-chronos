@@ -130,6 +130,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    mainWidgetElement.addClass('manager');
 	}
 
+
 	// Set height (if vertical orientation) or width (if horizontal orientation) based on configuration value:
 	$(widgetSelector).css(volumeDimensionName, volumePercentage + "%");
 
@@ -808,44 +809,40 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
-    // Should (DateTime) Events have their own class?
-
-    /*
-     * Initiates (UI) events on individual (DateTime) events.
+    /**
+     * 
+     * @function
+     * @description
+     *   Gets date at current start (top/left) position of widget:
+     * @returns {Date}
+     * 
      */
-    self.initiateEventEvents = function () {
-	/* FORMERLY INTERACT */
-	// global to timelineYears items:
-	var eventID = '';
+    self.getStartDate = function () {
 
-	var listCenterTop = 0;  // Is there any reason for this to be global?
+	// alert($(widgetSelector).find('.tModel').first().attr('class') + ' : ' + $(widgetSelector).find('.tModel').first().offset()[startEdgeName]);
 
-	// Hovers on timeline years
-	$("#timelineYears img").live("mouseover",
-				     function() {
-					 eventID = $(this).attr("id").replace('chart-','');
-					 $(this).addClass("active");
-					 
-					 if ($(this).hasClass("nonResult")) {
-					     $("#list-" + eventID).slideDown().addClass("tempDisplay");
-					     return false;
-					 }
+	// 1) Grab a tile div in the widget, any tile div.  Get top/left position.
 
-					 $("#list-" + eventID).addClass("active");
-				     });
-	
-	$("#timelineYears img").live("mouseout",
-				     function() {
-					 $(this).removeClass("active");
+	var sampleTModel = $(widgetSelector).find('.tModel').first();
 
-					 if ($(this).hasClass("nonResult")){
-					     $("#list-" + eventID).slideUp().addClass("removeClass");
-					     return false;
-					 }
+	// 2) Find seconds value for #1 (#1's value * secondsToPixels)
 
-					 $("#list-" + eventID).removeClass("active");
-				     });
+	// ( * -1 because if we are in negative land, we actually want to *add* seconds, and vice versa: )
+	var differenceInSeconds = (sampleTModel.offset()[startEdgeName] * secondsToPixels) * -1;
+
+	// 3) Parse date from div that was grabbed.
+
+	// Can we functionalize this?  We use something like it in two other places...I recall there being a problem with getting those two to sync up though?
+	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})");
+	var dateClass       = sampleTModel.attr('class').match(dateClassRegExp);
+	var thisDate        = dataModel.getDateObject(dateClass[1] + '-' + dateClass[2] + '-' + dateClass[3] + ' ' + dateClass[4] + ':' + dateClass[5] + ':' + dateClass[6]);
+
+	// 4) Return date with difference in seconds between tile div date and '0' pos added:
+
+	return thisDate.addSeconds(differenceInSeconds);
     };
+
+
 
 
     // end of model factory function
