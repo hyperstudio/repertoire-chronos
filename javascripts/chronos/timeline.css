@@ -32,12 +32,24 @@ div.tModel_float { float:left; height:100%; }
 
 .manager { background-image:url(img/decade-gradient-line.png); background-position:right; background-repeat:repeat-y; }
 
-.chronos_vertical .manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; position:absolute; top:-.5em; right:0; padding:0; text-align:center; z-index:9;} /* Markers indicate placement on timeline */
-
+.manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; position:absolute; padding:0; text-align:center; z-index:9;}
+.chronos_vertical .manager li .marker {top:-.5em; right:0;} /* Markers indicate placement on timeline */
 
 /* position: absolute here seems to screw up initial positioning? */
-.chronos_horizontal .manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; top:-.5em; right:0; padding:0; text-align:center; z-index:9;} /* Markers indicate placement on timeline */
+.chronos_horizontal .manager li .marker {left:-.5em; top:0;
+-webkit-transform: rotate(90deg); 
+-moz-transform: rotate(90deg);
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+} /* background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; top:-.5em; right:0; padding:0; text-align:center; z-index:9; */
+
+.ot_horizontal { list-style-type:none;  width:100%; height:100%; border-left:1px solid #BEDEFF; }
+
+/* Markers indicate placement on timeline */
 /* .chronos_horizontal .manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; position:absolute; top:-.5em; right:0; padding:0; text-align:center; z-index:9;} /* Markers indicate placement on timeline */
+
+.eDensity {position:absolute; z-index:3;x top:0; left:0;}
+.chronos_vertical .eDensity {background-image:url(img/event-density.png); background-repeat:repeat-x; width:100%; height:20px; margin-left:-20px;}
+.chronos_horizontal .eDensity {background-image:url(img/event-density-horiz.png); background-repeat:repeat-y; height:100%; width:20px; margin-top:-15px;}/*margin-bottom:-10px; */
 
 .ie .manager li .marker {background:#069;}
 
@@ -49,11 +61,9 @@ li .start {} /* Styling for the first marker of each tile, ie " font-weight:bold
 
 .oneTile_float li { display:block; float:left; }
 
-.ot_horizontal { list-style-type:none; height: 100%; border-left:1px solid #BEDEFF; }
-
-div.chronos_vertical #scaler{position:absolute; z-index:10; left:0; border:1px solid #000; border-right:none; border-left:none; background:url(img/scaler-gradient2.png); background-position:right; background-repeat:repeat-y;} /* Set Scaler Positioning, Color, Opacity, etc.  */
-
-div.chronos_horizontal #scaler{position:absolute; z-index:10; top:0; border:1px solid #000; border-top:none; border-bottom:none; background:url(img/scaler-gradient2.png); background-position:top; background-repeat:repeat-x;} /* Set Scaler Positioning, Color, Opacity, etc.  */
+#scaler {position:absolute; z-index:10; border:1px solid #000;}
+div.chronos_vertical #scaler{left:0; border-right:none; border-left:none; background:url(img/scaler-gradient2.png); background-position:right; background-repeat:repeat-y;}
+div.chronos_horizontal #scaler{top:0; border-top:none; border-bottom:none; background:url(img/scaler-gradient-horiz.png); background-position:top; background-repeat:repeat-x;} /* Set Scaler Positioning, Color, Opacity, etc.  */
 
 div.chronos_vertical #innerScaler, #innerScaler.drag:hover {position:relative; background-image:url(img/scaler-left-line.png); border-right: background-position:left; background-repeat:repeat-y;} /*   */
 /* div.chronos_horizontal #innerScaler, #innerScaler.drag:hover {position:relative; background-image:url(img/scaler-left-line.png); border-bottom: background-position:top; background-repeat:repeat-x;} /*   */
@@ -71,7 +81,6 @@ div.chronos_horizontal #topArrow {left:-9px; border-right:1px solid #E2F2FF;}
 
 div.chronos_vertical #botArrow {bottom:-9px; border-top:1px solid #E2F2FF; background-position:center -9px;}
 div.chronos_horizontal #botArrow {right:-9px; border-left:1px solid #E2F2FF; background-position:-9px center;}
-
 
 .clear {clear:both;}
 

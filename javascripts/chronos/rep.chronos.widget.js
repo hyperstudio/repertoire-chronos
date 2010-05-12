@@ -674,23 +674,17 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    );
 				}
 			    } else if (eventViewType == 'density') {
-				if (orientation == 'vertical') {
-				    $(element).append(
-					"<img src='javascripts/chronos/img/event-density.png'"
-					    + " class='eDensity'"
-					    + " id='density-" + (events[i].id) + "'"
-					    + " style='position:absolute; z-index:3; width:100%; left:0;"
-					    + " margin-top:-20px; top:" + topPosPercentage + "%;' />"
-				    );
-				} else {
-				    $(element).append(
-					"<img src='javascripts/chronos/img/event-density.png'"
-					    + " class='eDensity'"
-					    + " id='density-" + (events[i].id) + "'"
-					    + " style='position:absolute; z-index:3; height:100%; top:0;"
-					    + " margin-left:-20px; left:" + topPosPercentage + "%;' />"
-				    );
-				}
+					if (orientation == 'vertical') {
+						var orientationStyles = "top:" + topPosPercentage;
+					} else {
+						var orientationStyles = "left:" + topPosPercentage;
+					}
+					$(element).append(
+					"<div"
+						+ " class='eDensity'"
+						+ " id='density-" + (events[i].id) + "'"
+						+ " style='" + orientationStyles + "%;' />"
+					);	
 			    }
 			}
 
