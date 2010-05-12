@@ -18,8 +18,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
     // PRIVATE
 
-    var widgets       = {};  // Widgets inside timeline.
+    var widgets       = {};    // Widgets inside timeline.
     var managerWidget = null;  // Store this so we don't have to keep looping through widgets collection
+    var eventList     = null;  // Event listing widget
 
     // DEFAULTS
     var defaults = {
@@ -111,6 +112,13 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							 }, dataModel);
 */
 
+	//  And here create event list for the side:
+	eventList = repertoire.chronos.eventListWidget(mainSelector, {
+							   startDate:        defaults.startDate,
+							   volumeSize:       '300',
+							   widgetSelector:   '#eventList'
+						       }, dataModel);
+
 
 	/*
 	 * First we have to figure out the 'manager' secondsToPixels value.
@@ -130,6 +138,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	    if (!widgets[name].isManager()) {
 		widgets[name].setManagerStP(managerStP);
 		widgets[name].initialize(defaults.timelineSize, defaults.orientation);
+		widgets[name].initiateEventItemInteraction(event_icon_callback);
 	    }
 	}
 
@@ -139,19 +148,24 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	scaler.initialize();
 	scaler.initiateScalerEvents();
 
-	var eventList = repertoire.chronos.eventListWidget(mainSelector, {
-							       startDate:        defaults.startDate,
-							       volumeSize:       '300',
-							       widgetSelector:   '#eventList'
-							   }, dataModel);
-
 	eventList.initialize(defaults.timelineSize, defaults.orientation);
-	eventList.initiateListUIEvents(event_click_callback);
+	eventList.initiateListUIEvents(event_list_callback);
+
+	self.initializeTags();
     };
 
 
-    var event_click_callback = function () {
+    var event_icon_callback = function () {
+	// Get rid of all the old highlighted ones first:
+	$('.highlight_event').removeClass('highlight_event');
+	$(this).addClass('highlight_event');
 
+	eventList.scrollToEvent($(this).attr('id').replace(/^event-/, ''));
+	return false;  // if I don't have this it is run twice?
+    };
+
+
+    var event_list_callback = function () {
 	// Get rid of all the old highlighted ones first:
 	$('.highlight_event').removeClass('highlight_event');
 	$('.highlight_event_li').removeClass('highlight_event_li');
@@ -292,6 +306,35 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
  	    $(thisWidget.getSelector()).draggable( draggable_config );
 	}
+    };
+
+
+
+    /**
+     *  First attempt at tag viewing/manipulation
+     */
+    self.initializeTags = function () {
+	var tags = dataModel.getTags();
+	var tag_string = '';
+	for (name in tags) {
+	    tag_string = tag_string + " <a href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
+	}
+	$('div#chronos_tags').append(tag_string);
+
+	$('a.tag').click(
+	    function () {
+		$('a.tag').removeClass('highlight_event_tag');
+		$(this).addClass('highlight_event_tag');
+
+		$('img.eDot').removeClass('highlight_event');
+		$('img.eDot').removeClass('highlight_event_tag');
+		$('img.' + $(this).attr('id')).addClass('highlight_event');
+		$('img.' + $(this).attr('id')).addClass('highlight_event_tag');
+
+		$('li.eventListEvent').removeClass('highlight_event_tag');
+		$('li.' + $(this).attr('id')).addClass('highlight_event_tag');
+	    }
+	);
     };
 
 

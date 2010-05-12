@@ -179,6 +179,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	if (orientation == 'horizontal') {
 	    self.setSize();
 	}
+
+	// Initialize (DateTime) event interaction:
+	//self.initiateEventItemInteraction();
     };
 
 
@@ -652,10 +655,17 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 				var class_regex = / /g;
 
+				var tag_string = '';
+				for (k = 0; k < events[i].tags.length; k++) {
+				    tag_string += ' ' + events[i].tags[k].replace(/ /g, '_');
+				}
+
+
 				if (orientation == 'vertical') {
 				    $(element).append(
 					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
+					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_')
+					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
 					    + " margin-top: -10px; top: " + topPosPercentage + "%' title='" + events[i].title + "'"
@@ -666,6 +676,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    $(element).append(
 					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
 					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
+					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; top:" + leftPosition + "px;"
 					    + " margin-left: -10px; left: " + topPosPercentage + "%' title='" + events[i].title + "'"
@@ -822,7 +833,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// 2) Find seconds value for #1 (#1's value * secondsToPixels)
 
 	// ( * -1 because if we are in negative land, we actually want to *add* seconds, and vice versa: )
-	var differenceInSeconds = (sampleTModel.offset()[startEdgeName] * secondsToPixels) * -1;
+	var differenceInSeconds = ((sampleTModel.offset()[startEdgeName] - $(selector).offset()[startEdgeName]) * secondsToPixels) * -1;
 
 	// 3) Parse date from div that was grabbed.
 
@@ -837,6 +848,28 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
 
+    /**
+     * 
+     * @function
+     * @description
+     *   Initializes (UI) event handling for (DateTime) event interaction.
+     * 
+     */
+    self.initiateEventItemInteraction = function(event_icon_callback) {
+	$('.eDot').live('click', event_icon_callback);
+
+	$('.eDot').live('mouseover',
+			function () {
+			    $(this).addClass('highlight_event_over');
+			    $('#' + $(this).attr('id').replace(/^event-/, '')).addClass('highlight_event_li_over');
+			});
+
+	$('.eDot').live('mouseout',
+			function () {
+			    $(this).removeClass('highlight_event_over');
+			    $('#' + $(this).attr('id').replace(/^event-/, '')).removeClass('highlight_event_li_over');
+			});
+    };
 
 
     // end of model factory function

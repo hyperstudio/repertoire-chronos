@@ -24,11 +24,11 @@
 
   <script>
 
-  $(document).ready(
+  $(window).load(
     function() {
       var chronos_config = {
         orientation: 'vertical',
-        startDate:   'Jan 01, 1960 00:00:00',
+//        startDate:   'Jan 01, 1960 00:00:00',
         url:         'http://slebinos.mit.edu/dev/repertoire-chronos/',
         js_path:     'javascripts/'
       };
@@ -49,8 +49,10 @@
       } else if (URLString.match('gs_url=(.*)&')) {
         alert("I'm sorry, the URL must be a Google spreadsheets URL. See below for formatting instructions. (Reverting to default data-set.)");
         chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
+        chronos_config['tag_name']   = 'tags';
       } else {
         chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
+        chronos_config['tag_name']   = 'tags';
       }
 
       $('input#horiz').click(function() {
@@ -118,10 +120,15 @@
 
   <hr size='1'>
 
+  <div id='chronos_tags'></div>
+
+  <hr size='1'>
+
 </div>
 
-
+<!--
 <div id="dataMonitor">
+-->
 
 <!--
   <div id="thisWidgetTopStuff"><span class='dataTitle'>Currently dragged widget top-related data: </span><span class='data'>0<span></div>
@@ -160,12 +167,15 @@
   <!-- div id="ow"><span class='dataTitle'>Other Widget data:</span><span class='data'></span></div -->
   <!-- div id="dates"><span class='dataTitle'>Dates:</span><span class='data'></span></div -->
 
+<!--
   <div id="eventListing"><span class='dataTitle'>Selected Event:</span><span class='data'></span></div>
 
   <div id="debug"></div>
+-->
 
+<!--
 </div>
-
+-->
 
 
 </body>

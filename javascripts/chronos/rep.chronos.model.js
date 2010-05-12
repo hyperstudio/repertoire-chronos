@@ -22,6 +22,7 @@ repertoire.chronos.model = function(options) {
     options['id_name']    = options['id_name']    || 'id';
     options['title_name'] = options['title_name'] || 'title';
     options['date_name']  = options['date_name']  || 'start';
+    options['tag_name']   = options['tag_name']   || 'tags';
 
 
     // PRIVATE
@@ -226,7 +227,8 @@ repertoire.chronos.model = function(options) {
 		   self.data.push({
 				      id:    nextLevel(event, options.id_name),
 				      title: nextLevel(event, options.title_name),
-				      start: parseMethod(nextLevel(event, options.date_name))
+				      start: parseMethod(nextLevel(event, options.date_name)),
+				      tags:  nextLevel(event, options.tag_name)
 				  });
 	       });
 
@@ -629,6 +631,29 @@ repertoire.chronos.model = function(options) {
 	return eventsSelection;
     };
 
+
+    /**
+     * @function
+     * @description
+     *   If tags exist in the feed, returns a list of unique tags.
+     * @returns {Array}
+     */
+    self.getTags = function () {
+	var tags = {};
+	for (var i = 0; i < self.data.length; i++) {
+	    if (self.data[i].tags != null) {
+		for (k = 0; k < self.data[i].tags.length; k++) {
+		    if (tags[self.data[i].tags[k]] == null) {
+			tags[self.data[i].tags[k]] = 1;
+		    } else {
+			tags[self.data[i].tags[k]]++;
+		    }
+		}
+	    }
+	}
+
+	return tags;
+    };
 
     // end of model factory function
     return self;

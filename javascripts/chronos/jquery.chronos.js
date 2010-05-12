@@ -110,6 +110,10 @@
                          timelineOptions['startDate'] = config.startDate;
 		     }
 
+                     if (config.tag_name != null) {
+                         timelineOptions['tag_name'] = config.tag_name;
+		     }
+
 		 } else {
 		     // Shouldn't be hard-coded.  Should just throw an error if we don't have these args.
 		     modelOptions.params['url'] = "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
@@ -139,6 +143,7 @@
 		     $this.addClass("ie");
 		 }
 
+/*
 		 // Just testing for now.  Need to build more thorough scaffolding (class?) for this.
 		 $('img.eDot').live('click',
 		     function (index, element) {
@@ -155,6 +160,8 @@
                          $('div#eventListing span.data').html('<br /><br />id: <span class="id">' + $(this).attr('id') + '</span><br />title: <span class="title">' + title + '</span><br />date: <span class="date">' + $(this).attr('date') + '</span><br />style: ' + $(this).attr('style') + '<br />');
 		     }
 		 );
+*/
+
 	     }
 	 );
 
