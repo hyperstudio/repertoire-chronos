@@ -108,7 +108,7 @@ html, body {height:100%} /* 100% height is only required if you want timeline to
 	
 /* DEBUGGING STUFF: reorganize later */
 
-div#gs { float: left; margin: 20px; padding: 20px; border: 2px solid light blue; width: 700px; }
+div#gs { float: left; margin: 0px; padding: 5px; border: 2px solid light blue; width: 350px; }
 
 #dataMonitor { float: left; margin: 20px; padding: 20px; border: 2px solid gray; width: 700px; }
 #dataMonitor div { margin-bottom: 15px; }
@@ -124,6 +124,8 @@ div#eventList { display:block; float:left; border-right:1px solid black; border-
 div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 60px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
 div#eventList ul.eventList { background-color: #FDF5E6 }
 
+div#eventList li.date_heading { height: 20px; font-size: 16px; font-weight: bold; background-color: #CDAA7D; }
+
 .highlight_event { border:2px solid #FF9912; }
 .highlight_event_li { background-color: #FFD39B; }
 .highlight_event_over { background-color: #FFEC8B; }
@@ -131,4 +133,6 @@ div#eventList ul.eventList { background-color: #FDF5E6 }
 
 .highlight_event_tag { background-color: #FA8072 }
 
+a.tag { text-decoration: none; color: brown; }
+a.tag:hover { text-decoration: none; color: brown; }
 span#tags { font-size: 10px; }

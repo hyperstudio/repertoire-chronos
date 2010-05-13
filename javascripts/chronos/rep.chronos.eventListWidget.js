@@ -82,7 +82,13 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 	var eventList = $('<ul></ul>').appendTo($(widgetSelector));
 	eventList.addClass('eventList');
 
+	var lastYear = 0;
+
 	for (var i = 0; i < dataModel.length(); i++) {
+	    if (lastYear != dataModel.data[i].start.getFullYear()) {
+		$('<li class="date_heading">' + dataModel.data[i].start.getFullYear() + '</li>').appendTo($(widgetSelector + ' ul.eventList'));
+	    }
+
 	    var thisLI = $('<li></li>').appendTo($(widgetSelector + ' ul.eventList'));
 	    thisLI.attr('id', dataModel.data[i].id);
 
@@ -104,6 +110,8 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
 	    thisLI.append(dataModel.data[i].start.toString('MM/dd/yyyy') + ':<br />&nbsp;&nbsp;<strong>' + title + '</strong><br /><span id="tags">' + tag_string + '</span>');
 	    thisLI.addClass('eventListEvent');
+
+	    lastYear = dataModel.data[i].start.getFullYear();
 	}
     };
 

@@ -305,8 +305,12 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	    // Lets us do labeling differently for first one...may want to add other classes like this one for different criteria?
 	    if (i == 0) { subIntervalElement.find('span').addClass('first'); }
 
-	    // Add simple label:
-	    subIntervalElement.find('span').html((i + 1).toString());
+	    // Add simple label:   HACKY
+	    if (intervalName == 'year') {
+		subIntervalElement.find('span').html(currentDate.clone().add({ months: i }).toString('MMM'));
+	    } else {
+		subIntervalElement.find('span').html((i + 1).toString());
+	    }
 
 	    // Now, we have to keep the decimal remainder and add it to the previous value...then add that to the <volumeD> (height or width), and take the decimal remainder
 	    var thisDecimal = newSubIntervalSize - parseInt(newSubIntervalSize);                              // Splits off decimal value

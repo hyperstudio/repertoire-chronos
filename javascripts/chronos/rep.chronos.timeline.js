@@ -1,3 +1,4 @@
+
 /*
  * Model class for Chronos Timeline
  * 
@@ -26,7 +27,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     var defaults = {
 	startDate:           options['startDate']   || 'Jan 01, 1984 00:00:00',
 	orientation:         options['orientation'] || 'vertical',   // What direction should this timeline be (options: vertical or horizontal):
-        volumeDimensionVal:  350,
+        volumeDimensionVal:  300,
 	timelineSize:        null,                            // -NEEDS INITIALIZATION
 	tileOffset:          -2,                              // How many tiles back do we pull? (to precache upward)
 
@@ -78,7 +79,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.decadesWidget = repertoire.chronos.widget(mainSelector, {
 							      startDate:           defaults.startDate,
-							      volumePercentage:    '30',
+							      volumePercentage:    '15',
 							      widgetSelector:      '#timelineDecades',
 							      intervalName:        'decade',
 							      subIntervalName:     'year',
@@ -90,7 +91,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
 							    startDate:           defaults.startDate,
-							    volumePercentage:    '70',
+							    volumePercentage:    '85',
 							    widgetSelector:      '#timelineYears',
 							    intervalName:        'year',
 							    subIntervalName:     'month',
@@ -317,7 +318,8 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	var tags = dataModel.getTags();
 	var tag_string = '';
 	for (name in tags) {
-	    tag_string = tag_string + " <a href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
+	    tag_string = tag_string + " <a style='font-size:" + tags[name]  + "' href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
+	    //tag_string = tag_string + " <a href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
 	}
 	$('div#chronos_tags').append(tag_string);
 
