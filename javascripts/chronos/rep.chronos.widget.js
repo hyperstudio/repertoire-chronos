@@ -618,7 +618,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    var topPosPercentage = (startPosition / parentHeight) * 100;
 
 			    // Debugging
-
 /*
 			    $("#dataMonitor #dates span.data").append(
 				"<li>" + events[i].id + ': ' + events[i].start.toString() + ", "
@@ -629,8 +628,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 			    if (eventViewType == 'icon') {
 				// TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
-				var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
+				// var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
 				// var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;
+
+				// Temporarily set to map to tag count
+				var dotSize      = (Math.floor(events[i].tags.length / 2) + ((Math.floor(events[i].tags.length / 2)) % 2)) + 12;
 
 				var leftPosition = 20;
 				leftPosition = (wasPosCount * iconWidth) - iconWidth; // how far to indent?
@@ -661,7 +663,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 				var tag_string = '';
 				for (k = 0; k < events[i].tags.length; k++) {
-				    tag_string += ' ' + events[i].tags[k].replace(/ /g, '_');
+				    tag_string += ' ' + events[i].tags[k].replace(/ /g, '_').replace(/\./g, '');
 				}
 
 

@@ -120,9 +120,10 @@ div#eventListing span.data span.title, div#eventListing span.data span.id, div#e
 
 /* Event List Styles (Note that it is *OUTSIDE* of main chronos div) */
 
-div#eventList { display:block; float:left; border-right:1px solid black; border-left:1px solid black; position:relative; cursor:pointer; cursor:hand; }
-div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 60px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
-div#eventList ul.eventList { background-color: #FDF5E6 }
+div#eventList { display:block; float:left; border-right:1px solid black; border-left:1px solid black; position:relative; cursor:pointer; cursor:hand; overflow:hidden;}
+
+div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 75px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
+div#eventList ul.eventList { background-color: #FDF5E6; }
 
 div#eventList li.date_heading { height: 20px; font-size: 16px; font-weight: bold; background-color: #CDAA7D; }
 
@@ -132,7 +133,11 @@ div#eventList li.date_heading { height: 20px; font-size: 16px; font-weight: bold
 .highlight_event_li_over { background-color: #FFEC8B; }
 
 .highlight_event_tag { background-color: #FA8072 }
+.highlight_event_tag-link { background-color: #FFE4C4 }
 
 a.tag { text-decoration: none; color: brown; }
 a.tag:hover { text-decoration: none; color: brown; }
-span#tags { font-size: 10px; }
+
+li.eventListEvent span.event_date { font-size: 14px; font-weight: bold; }
+li.eventListEvent span.event_title { font-size: 12px; font-weight: bold; }
+li.eventListEvent span.tags { font-size: 10px; color: brown;}

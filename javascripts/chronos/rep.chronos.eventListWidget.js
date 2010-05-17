@@ -66,12 +66,12 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 	// if we don't set this to initialize we just get 'auto' and it throws everything off.
 	$(widgetSelector).css(startEdgeName, '0px');
 
-	$(widgetSelector).css(volumeDimensionInvName, '100%');
+	$(widgetSelector).css(volumeDimensionInvName, timelineSize);  // Need explicit size rather than percentage so overflow/scrolling works right
 
 	self.buildEventList();
 
 	// Totally arbitrary garbage in here now so we start somewhere that I can guarantee we've generated tiles for on the other timelines...
-	$(widgetSelector).css(startEdgeName, '-8000px');
+	///$(widgetSelector).css(startEdgeName, '-8000px');
     };
 
 
@@ -94,8 +94,8 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
 	    var tag_string = '';
 	    for (k = 0; k < dataModel.data[i].tags.length; k++) {
-		thisLI.addClass(dataModel.data[i].tags[k].replace(/ /g, '_'));
-		tag_string = tag_string + ' | ' + dataModel.data[i].tags[k];
+		thisLI.addClass(dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, ''));
+		tag_string = tag_string + ' | <a class="eventList tag ' + dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, '') + '" href="#">' + dataModel.data[i].tags[k] + '</a>';
 	    }
 
             var title = '';
@@ -108,7 +108,7 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
                 title = dataModel.data[i].title;
 	    }
 
-	    thisLI.append(dataModel.data[i].start.toString('MM/dd/yyyy') + ':<br />&nbsp;&nbsp;<strong>' + title + '</strong><br /><span id="tags">' + tag_string + '</span>');
+	    thisLI.append("<span id='" + dataModel.data[i].id  + "' class='event_select'><span class='event_start'>" + dataModel.data[i].start.toString('MM/dd/yyyy') + ':</span><br /><span class="event_title">' + title + '</span></span><br /><span class="tags">' + tag_string + '</span>');
 	    thisLI.addClass('eventListEvent');
 
 	    lastYear = dataModel.data[i].start.getFullYear();
@@ -126,7 +126,7 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 	    draggable_config['axis'] = 'x';
 	}
 
- 	$(widgetSelector).draggable(draggable_config);
+ 	$(widgetSelector + ' ul').draggable(draggable_config);
 	$('.eventListEvent').live('click', event_list_callback);
 
 	$('.eventListEvent').live('mouseover',
@@ -174,8 +174,8 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
 	// ...and animate the position to that event (positioned halfway down the timeline):
 	var animate_options = {};
-	animate_options[startEdgeName] = ( parseFloat($(widgetSelector).css(startEdgeName)) - parseFloat(eventElement.offset()[startEdgeName]) + (timelineSize / 2) );
-	$(widgetSelector).animate(animate_options);
+	animate_options[startEdgeName] = ( parseFloat($(widgetSelector + ' ul').offset()[startEdgeName]) - parseFloat(eventElement.offset()[startEdgeName]) + (timelineSize / 2) );
+	$(widgetSelector + ' ul').animate(animate_options);
     };
 
 

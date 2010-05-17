@@ -153,6 +153,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	eventList.initiateListUIEvents(event_list_callback);
 
 	self.initializeTags();
+
+	// Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!
+	eventList.scrollToEvent('3932');
     };
 
 
@@ -318,23 +321,35 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	var tags = dataModel.getTags();
 	var tag_string = '';
 	for (name in tags) {
-	    tag_string = tag_string + " <a style='font-size:" + tags[name]  + "' href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
-	    //tag_string = tag_string + " <a href='#' class='tag' id='" + name.replace(/ /g, '_') + "'>" + name + "</a> | ";
+	    tag_string = tag_string + " <a style='font-size:" + parseInt(tags[name] / 2)  + "px' href='#' class='tag' id='" + name.replace(/ /g, '_').replace(/\./g, '') + "'>" + name + "</a> | ";
+	    //tag_string = tag_string + " <a href='#' class='tag' id='" + name.replace(/ /g, '_').replace(/\./g, '') + "'>" + name + "</a> | ";
 	}
 	$('div#chronos_tags').append(tag_string);
 
 	$('a.tag').click(
 	    function () {
 		$('a.tag').removeClass('highlight_event_tag');
-		$(this).addClass('highlight_event_tag');
+		$('a.eventList').removeClass('highlight_event_tag-link');
+
+		var tagName = '';
+
+		if ($(this).hasClass('eventList')) {
+		    tagName = $(this).html().replace(/ /g, '_').replace(/\./g, '');
+		    $('a.' + tagName).addClass('highlight_event_tag-link');
+		    $('#' + tagName).addClass('highlight_event_tag');
+		} else {
+		    tagName = $(this).attr('id');
+		    $('a.' + tagName).addClass('highlight_event_tag-link');
+		    $(this).addClass('highlight_event_tag');
+		}
 
 		$('img.eDot').removeClass('highlight_event');
 		$('img.eDot').removeClass('highlight_event_tag');
-		$('img.' + $(this).attr('id')).addClass('highlight_event');
-		$('img.' + $(this).attr('id')).addClass('highlight_event_tag');
+		$('img.' + tagName).addClass('highlight_event');
+		$('img.' + tagName).addClass('highlight_event_tag');
 
 		$('li.eventListEvent').removeClass('highlight_event_tag');
-		$('li.' + $(this).attr('id')).addClass('highlight_event_tag');
+		$('li.' + tagName).addClass('highlight_event_tag');
 	    }
 	);
     };
