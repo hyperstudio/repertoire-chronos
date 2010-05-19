@@ -61,6 +61,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	} else {
 	    $(mainSelector).height(defaults.volumeDimensionVal + 'px');
 	    defaults.timelineSize = parseInt($(mainSelector).css('width'));
+
+	    // If we are horizontal, need to add wrapper for hacky solution...
+	    $(mainSelector).wrapInner("<div id='chronos_horizontal_wrapper'/>");
+	    $('#chronos_horizontal_wrapper').width('100000px');
 	}
 
 
@@ -113,12 +117,14 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							 }, dataModel);
 */
 
-	//  And here create event list for the side:
-	eventList = repertoire.chronos.eventListWidget(mainSelector, {
-							   startDate:        defaults.startDate,
-							   volumeSize:       '300',
-							   widgetSelector:   '#eventList'
-						       }, dataModel);
+	if (defaults.orientation == 'vertical') {
+	    //  And here create event list for the side:
+	    eventList = repertoire.chronos.eventListWidget(mainSelector, {
+							       startDate:        defaults.startDate,
+							       volumeSize:       '300',
+							       widgetSelector:   '#eventList'
+							   }, dataModel);
+	}
 
 
 	/*
@@ -149,13 +155,18 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	scaler.initialize();
 	scaler.initiateScalerEvents();
 
-	eventList.initialize(defaults.timelineSize, defaults.orientation);
-	eventList.initiateListUIEvents(event_list_callback);
+	if (defaults.orientation == 'vertical') {
+	    eventList.initialize(defaults.timelineSize, defaults.orientation);
+	    eventList.initiateListUIEvents(event_list_callback);
+	}
 
 	self.initializeTags();
 
-	// Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!
-	eventList.scrollToEvent('3932');
+	if (defaults.orientation == 'vertical') {
+	    // Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!
+	    eventList.scrollToEvent('3932');
+	} else {
+	}
     };
 
 
@@ -164,7 +175,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	$('.highlight_event').removeClass('highlight_event');
 	$(this).addClass('highlight_event');
 
-	eventList.scrollToEvent($(this).attr('id').replace(/^event-/, ''));
+	if (defaults.orientation == 'vertical') {
+	    eventList.scrollToEvent($(this).attr('id').replace(/^event-/, ''));
+	}
+
 	return false;  // if I don't have this it is run twice?
     };
 
@@ -326,6 +340,11 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	}
 	$('div#chronos_tags').append(tag_string);
 
+	if (defaults.orientation == 'horizontal') {
+	    $('div#chronos_tags').css('width', '700px');
+	    $('div#chronos_tags').css('height', '200px');
+	}
+
 	$('a.tag').click(
 	    function () {
 		$('a.tag').removeClass('highlight_event_tag');
@@ -378,9 +397,18 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	self.updateMousePos = function () { defaults.wasMouseY = defaults.mouseY; };
 	self.getMousePos    = function () { return defaults.mouseY; };
     } else {
-	self.getMouseDiff   = function () { return defaults.wasMouseX - defaults.mouseX; };
-	self.updateMousePos = function () { defaults.wasMouseX = defaults.mouseX; };
-	self.getMousePos    = function () { return defaults.mouseX; };
+	self.getMouseDiff   = function () {
+	    $("#dataMonitor #mousePos span.data").html("defaults.wasMouseX - defaults.mouseX: " + (defaults.wasMouseX - defaults.mouseX));
+	    return defaults.wasMouseX - defaults.mouseX;
+	};
+	self.updateMousePos = function () {
+	    $("#dataMonitor #mousePos span.data").html("defaults.wasMouseX = defaults.mouseX: " + (defaults.wasMouseX = defaults.mouseX));
+	    defaults.wasMouseX = defaults.mouseX;
+	};
+	self.getMousePos    = function () {
+	    $("#dataMonitor #mousePos span.data").html("defaults.mouseX: " + defaults.mouseX);
+	    return defaults.mouseX;
+	};
     };
 
 

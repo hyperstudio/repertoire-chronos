@@ -23,6 +23,7 @@ repertoire.chronos.model = function(options) {
     options['title_name'] = options['title_name'] || 'title';
     options['date_name']  = options['date_name']  || 'start';
     options['tag_name']   = options['tag_name']   || 'tags';
+    options['desc_name']  = options['desc_name']  || 'desc';
 
 
     // PRIVATE
@@ -228,7 +229,8 @@ repertoire.chronos.model = function(options) {
 				      id:    nextLevel(event, options.id_name),
 				      title: nextLevel(event, options.title_name),
 				      start: parseMethod(nextLevel(event, options.date_name)),
-				      tags:  nextLevel(event, options.tag_name)
+				      tags:  nextLevel(event, options.tag_name),
+				      desc:  nextLevel(event, options.desc_name)
 				  });
 	       });
 

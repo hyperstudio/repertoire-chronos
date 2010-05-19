@@ -269,6 +269,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 	$(".ui-resizable-" + defaults.bottomHandle).mousedown(
 	    function () {
+		$("#dataMonitor #mousePos span.data").html("dragging bottom!");
 		bottomScalerDrag = true;
 		// $("#dataMonitor #scalerPosDebug span.data").html('');
 		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getStart() = ' + scalerViewWidget.getStart() + '<br />scalerViewWidget.getEndPositionRatio() = ' + scalerViewWidget.getStartPositionRatio());
@@ -277,6 +278,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 	$(".ui-resizable-" + defaults.topHandle).mousedown(
 	    function () {
+		$("#dataMonitor #mousePos span.data").html("dragging top!");
 		topScalerDrag = true;
 		// $("#dataMonitor #scalerPosDebug span.data").html('');
 		// $("#dataMonitor #scalerPosDebug span.data").append('<br />timeline size: ' + timeline.getSize() + '<br />scalerViewWidget.getSize() = ' + scalerViewWidget.getSize() + '<br />scalerViewWidget.getStart() = ' + scalerViewWidget.getStart() + '<br />scalerViewWidget.getEndPositionRatio() = ' + scalerViewWidget.getEndPositionRatio());
@@ -320,6 +322,8 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 
 			  });
 
+	var testinc = 0;
+
 	scalerElement.bind('resize',
 			  function(event, ui) {
 
@@ -345,7 +349,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 				  // $("#dataMonitor #changingStp span.data").html('false');
 			      }
 
-			      $("#dataMonitor #stpNew span.data").html(scalerViewWidget.getSecondsToPixels());
+1			      //$("#dataMonitor #stpNew span.data").html(scalerViewWidget.getSecondsToPixels());
 
 
 			      $("#dataMonitor #preResize span.data").html(
@@ -374,10 +378,12 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			      var newTop       = 0;  // for debugging more or less
 			      var newTopChange = 0;
 
+			      testinc++;
+
 			      // Top scaler handle drag:
 			      if (dragDirection == 'top') {
 				  newTop = (scalerViewWidget.getEndPositionRatio() * (-1 * scalerViewWidget.getSize())) + timeline.getSize();
-				  $("#dataMonitor #dragtype span.data").html('scaler top drag!  top/left pos for scalerViewWidget is now:' + scalerViewWidget.getStart());
+				  // $("#dataMonitor #dragtype span.data").html('testinc = ' + testinc + ', scaler top drag!  top/left pos for scalerViewWidget is now:' + scalerViewWidget.getStart());
 
 			      // Bottom scaler handle drag:
 			      } else if (dragDirection == 'bottom') {
@@ -386,7 +392,7 @@ repertoire.chronos.scaler = function(selector, options, timeline, widgets) {
 			      }
 
 			      if (parseInt(newTop) != 0) {
-				  //$("#dataMonitor #newtop span.data").html('gettig here? ' + newTop);
+				  $("#dataMonitor #newtop span.data").html('getting here? ' + newTop);
 				  $(scalerViewWidget.getSelector()).css(defaults.startEdgeName, newTop + 'px');  // CSS CHANGE HERE
 			      }
 

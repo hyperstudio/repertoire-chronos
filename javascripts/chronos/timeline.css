@@ -15,6 +15,8 @@ html, body, li, ul {margin:0; padding:0;}
 
 ul, ol, li {list-style:none;}
 
+/* #container { width: 1960px; } */
+
 #chronos, li .marker, .manager img {-moz-user-select: none; -khtml-user-select: none; user-select:none; cursor:pointer; cursor:hand;}
 
 /* Adjust the width and color of the timeline however you'd like */
@@ -22,8 +24,13 @@ ul, ol, li {list-style:none;}
 .chronos_vertical   { height:100%; width:300px; }
 .chronos_horizontal { width:100%; height:300px; }
 
+#chronos_horizontal_wrapper { }
+
 /* Added by DD to make things more abstracted... */
-div.tWidget { float:left; background-color:#EFFCFF; width:100%}
+div.tWidget { float:left; background-color:#EFFCFF; }
+.chronos_vertical div.tWidget { width:100%; }
+.chronos_horizontal div.tWidget { clear:both; }
+/* .chronos_horizontal div.tWidget, .chronos_horizontal div.tWidget div.tModel { white-space: nowrap; display: inline-block; } */
 div.tModel {}
 div.tModel_float { float:left; height:100%; }
 
@@ -36,16 +43,19 @@ div.tModel_float { float:left; height:100%; }
 .chronos_vertical .manager li .marker {top:-.5em; right:0;} /* Markers indicate placement on timeline */
 
 /* position: absolute here seems to screw up initial positioning? */
-.chronos_horizontal .manager li .marker {left:-.5em; top:0;
+.chronos_horizontal .manager li .marker {left:-.5em; top:11; padding: 1px;
 -webkit-transform: rotate(90deg); 
 -moz-transform: rotate(90deg);
 filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
 } /* background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; top:-.5em; right:0; padding:0; text-align:center; z-index:9; */
 
-.ot_horizontal { list-style-type:none;  width:100%; height:100%; border-left:1px solid #BEDEFF; }
+.ot_horizontal { list-style-type:none;  width:100%; height:100%; border-left:1px dashed #BEDEFF; }
 
 /* Markers indicate placement on timeline */
 /* .chronos_horizontal .manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; position:absolute; top:-.5em; right:0; padding:0; text-align:center; z-index:9;} /* Markers indicate placement on timeline */
+
+
+img.eDot:hover { -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid #000; }
 
 
 .eDensity {position:absolute; z-index:3;x top:0; left:0;}
@@ -116,23 +126,21 @@ div#gs { float: left; margin: 0px; padding: 5px; border: 2px solid light blue; w
 
 div#eventListing span.data span.title, div#eventListing span.data span.id, div#eventListing span.data span.date { font-weight: bold; }
 
-
-
 /* Event List Styles (Note that it is *OUTSIDE* of main chronos div) */
 
 div#eventList { display:block; float:left; border-right:1px solid black; border-left:1px solid black; position:relative; cursor:pointer; cursor:hand; overflow:hidden;}
 
 div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 75px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
 div#eventList ul.eventList { background-color: #FDF5E6; }
-
 div#eventList li.date_heading { height: 20px; font-size: 16px; font-weight: bold; background-color: #CDAA7D; }
 
-.highlight_event { border:2px solid #FF9912; }
+.highlight_event { border:2px solid #FF9912; -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid blue; }
 .highlight_event_li { background-color: #FFD39B; }
-.highlight_event_over { background-color: #FFEC8B; }
+.highlight_event_over { -moz-border-radius: 10px; -webkit-border-radius: 10px; background-color: #FFEC8B; border: 1px solid blue; }
 .highlight_event_li_over { background-color: #FFEC8B; }
 
-.highlight_event_tag { background-color: #FA8072 }
+.highlight_event_tag { background-color: #FA8072; }
+#chronos .highlight_event_tag { -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid blue; }
 .highlight_event_tag-link { background-color: #FFE4C4 }
 
 a.tag { text-decoration: none; color: brown; }
@@ -141,3 +149,31 @@ a.tag:hover { text-decoration: none; color: brown; }
 li.eventListEvent span.event_date { font-size: 14px; font-weight: bold; }
 li.eventListEvent span.event_title { font-size: 12px; font-weight: bold; }
 li.eventListEvent span.tags { font-size: 10px; color: brown;}
+
+
+/* tooltips (jQuery tools) for horizontal view */
+.tooltip { font-size: 12px; }
+.tooltip .date_title { font-weight: bold; }
+.tooltip .tags { font-size: 10px; color: grey; margin-top: 4px; }
+.tooltip .tag_separator { color: black }
+.tooltip .desc { font-size: 10px; font-weight: bold; color: brown; margin-top: 4px; }
+
+/* tooltip styling. by default the element to be styled is .tooltip  */
+.tooltip {
+	 display:none;
+	 /* background:transparent url(/tools/img/tooltip/black_arrow.png); */
+	 background-color: #FDF5E6;
+	 font-size:12px;
+	 width:260px;
+	 padding:10px;
+	 color:#000;
+         z-index: 10000001;
+         border: 1px solid brown;
+}
+
+
+/* other index page formatting...should probably not be in here. */
+
+p#try_data { background-color: #FDF5E6; cursor:pointer; cursor:hand; }
+p#try_data:hover { background-color: #FFE4C4; }
+div#data_config { border-top: 1px solid black; border-bottom: 1px solid black; }

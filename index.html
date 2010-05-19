@@ -7,7 +7,10 @@
   <script src="javascripts/jquery-1.4.2.js"></script>
   <script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
 
-  <!-- now load Repertoire Chronos: -->
+  <!-- using this for demo, just to do tooltip pop-ups a la Simile in horizontal layout. -->
+  <script src="javascripts/jquery.tools.min.js"></script>
+
+  <!-- now load Chronos: -->
   <script src="javascripts/chronos/jquery.chronos.js"></script>
 
   <!-- ...and the necessary CSS -->
@@ -27,8 +30,10 @@
   $(window).load(
     function() {
       var chronos_config = {
-        orientation: 'vertical',
-//        startDate:   'Jan 01, 1960 00:00:00',
+        orientation: 'horizontal',
+
+        /* startDate:   'Jan 01, 1960 00:00:00', */
+
         url:         'http://slebinos.mit.edu/dev/repertoire-chronos/',
         js_path:     'javascripts/'
       };
@@ -68,6 +73,31 @@
       });
 
       $('#chronos').chronos(chronos_config);
+
+      $("div#data_config").hide();
+      $('p#try_data').toggle(
+          function () { $("div#data_config").slideDown(); },
+          function () { $("div#data_config").slideUp(); }
+      );
+
+      if (chronos_config.orientation == 'horizontal') {
+        // Demoing tooltip (jQuery Tools)
+        //$("#timelineYears img.eDot").tooltip({
+        $("img.eDot").tooltip({
+          // events: { def: "click, mouseout" },  // There's probably a way to get it to close if you click outside, but will require more coding which isn't worth it just yet...
+
+          opacity: 0.65,
+
+          // tweak the position
+          offset: [10, 2],
+
+          // use the "slide" effect
+          effect: 'toggle'
+
+          // add dynamic plugin with optional configuration for bottom edge
+        }).dynamic({ bottom: { direction: 'down', bounce: false } });
+      }
+
     }
   );
 
@@ -83,14 +113,20 @@
 
 <!-- BEGIN HTML CODE FOR THE TIMELINE -->
 
+<!-- if I want to prevent 'flopping' in all situations...set height/width (depending on orientation--width for vertical orientation, for example) -->
+<div id='container'>
+
 <div id="chronos" class="panelResize"></div>
 
 <!-- END HTML CODE FOR THE TIMELINE -->
 
+
 <div id="gs">
 
-  <!--h2>HyperStudio's Repertoire Chronos Timeline</h2 -->
+  <h2>HyperStudio's Chronos Timeline</h2>
 
+  <p id='try_data'>To try your own data set, click here:</p>
+  <div id="data_config">
   <!--
   <p>Change the orientation:</p>
   <form id='orient' name='orient' action='' method='' />
@@ -98,9 +134,7 @@
   <input type='radio' id='vert' name='orientation' value='vertical' /> Vertical
   </form>
   -->
-  <hr size='1'>
 
-<!--
   <form id='gs' name='gs' action='' method='GET' />
   <p>Enter your Google Spreadsheet URL here to see your data in the Chronos timeline:<br />
   (for an example, try:<br />
@@ -119,11 +153,9 @@
 
   <p>For more details on formatting your spreadsheet and generating a URL, see here.</p>
 
-  <hr size='1'>
--->
-  <div id='chronos_tags'></div>
+  </div>
 
-  <hr size='1'>
+  <div id='chronos_tags'></div>
 
 </div>
 
@@ -150,34 +182,52 @@
 
   <div id="scalerPosDebug"><span class='dataTitle'>Scaler Pos Debugging:</span><span class='data'></span></div>
   <div id="dates"><span class='dataTitle'>Dates:</span><span class='data'></span></div>
+-->
+
+
+<!--
 
   <div id="dragtype"><span class='dataTitle'>Scaler Drag type: </span><span class='data'></span></div>
-
   <div id="initial"><span class='dataTitle'>INITIAL Scaler View Widget data: </span><span class='data'></span></div>
   <div id="stpOld"><span class='dataTitle'>Old STP for Scaler View Widget: </span><span class='data'></span></div>
+-->
+
+<!--
+  <div id="centerSetDump"><span class='dataTitle'>Center set dump: </span><span class='data'></span></div>
+-->
+
+<!--
   <div id="changingStp"><span class='dataTitle'>Changing STP? </span><span class='data'></span></div>
   <div id="stpNew"><span class='dataTitle'>New STP for Scaler View Widget: </span><span class='data'></span></div>
+
   <div id="preResize"><span class='dataTitle'>Pre-resize data: </span><span class='data'></span></div>
   <div id="postResize"><span class='dataTitle'>Post-resize Widget data: </span><span class='data'></span></div>
+
+
+  <div id="mousePos"><span class='dataTitle'>Mouse POS data: </span><span class='data'></span></div>
 
   <div id="svw"><span class='dataTitle'>Post-resetting newTop data: </span><span class='data'></span></div>
 
   <div id="newtop"><span class='dataTitle'>Setting new top on SVW to:</span><span class='data'></span></div>
-<!-- -->
+
+-->
 
   <!-- div id="ow"><span class='dataTitle'>Other Widget data:</span><span class='data'></span></div -->
-  <!-- div id="dates"><span class='dataTitle'>Dates:</span><span class='data'></span></div -->
+
+<!--
+  <div id="dates"><span class='dataTitle'>Dates:</span><span class='data'></span></div>
 
 <!--
   <div id="eventListing"><span class='dataTitle'>Selected Event:</span><span class='data'></span></div>
-
   <div id="debug"></div>
 -->
 
-<!--
 </div>
--->
 
+
+<div class='clear'></div>
+
+</div>
 
 </body>
 </html>

@@ -102,8 +102,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Hmm...bit of a hack to make sure that decades start with the '0' of the decade...
 	// otherwise a bunch of stuff gets messed up:
 	if (intervalName == 'decade') {
+	    $("#dataMonitor #dates span.data").html('getting modulus for: ' + widgetSelector + ' ' + topDate.getFullYear() + ', ' + (topDate.getFullYear() - (topDate.getFullYear() % 10)) + "<br />");
 	    topDate.setFullYear(topDate.getFullYear() - (topDate.getFullYear() % 10));
-	    // $("#dataMonitor #dates span.data").html('getting modulus for: ' + widgetSelector + ' ' + topDate.getFullYear() + ', ' + (topDate.getFullYear() - (topDate.getFullYear() % 10)) + "<br />");
 	}
 
 	/*
@@ -123,7 +123,14 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	oldSecondsToPixels = secondsToPixels;  // just to initialize for first scaler resize.
 
 	// Create initial widget HTML element and add id/classes:
-	var mainWidgetElement = $('<div />').appendTo($(selector));
+	var mainWidgetElement = '';
+
+	if (orientation == 'horizontal') {
+	    mainWidgetElement = $('<div />').appendTo($(selector + ' #chronos_horizontal_wrapper'));
+	} else {
+	    mainWidgetElement = $('<div />').appendTo($(selector));
+	}
+
 	mainWidgetElement.attr('id', widgetSelector.replace(/^#/, '')).addClass('tWidget');
 
 	if (isManager) {
@@ -139,14 +146,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// Now, generate our first tile.  We use this to center the widget and then build the rest of the tiles.
 	self.tile('up');
-
-
-        /* ASK BRETT ABOUT SMARTEST WAY TO DO THIS!? */
-	// If we don't do this when we are oriented horizontally, then we get layout problems with enclosed block elements wrapping.
-	if (orientation == 'horizontal') {
-	    self.setSize();
-	}
-        /* END ASK BRETT... */
 
 
 	/*
@@ -165,20 +164,24 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	 * 
 	 */
 
+	if (widgetSelector == '#timelineDecades') {
+	    $("#dataMonitor #centerSetDump span.data").html('timelineSize = ' + timelineSize
+							    + "<br />, dataModel.getSubIntervalDiff(startDate, subIntervalName) = " + dataModel.getSubIntervalDiff(startDate, subIntervalName)
+							    + '<br />, secondsToPixels = ' + secondsToPixels);
+	}
+
 	widgetOffset = Math.ceil(timelineSize / 2 + (dataModel.getSubIntervalDiff(startDate, subIntervalName) / secondsToPixels));
+	//widgetOffset = Math.ceil(timelineSize / 2);
 	$(widgetSelector).css(startEdgeName, (widgetOffset + 'px'));     // CSS CHANGE HERE
 
 	// Needed for scaling:
 	startPositionRatio  = self.getStart() / self.getSize();
 	endPositionRatio    = (self.getStart() + timelineSize) / self.getSize();
 
+	//alert("here we've set the position but haven't called checktiles yet");
+
 	self.checkTiles();
 	self.drawEvents();
-
-	// Need to do this every time after checking tiles for horizontal orientation:
-	if (orientation == 'horizontal') {
-	    self.setSize();
-	}
 
 	// Initialize (DateTime) event interaction:
 	//self.initiateEventItemInteraction();
@@ -299,7 +302,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 		subIntervalElement.find('.marker').width('100%');
 	    } else if (orientation == 'horizontal') {
 		subIntervalElement.addClass('ot_horizontal');
-		subIntervalElement.find('.marker').height('100%');
+		// subIntervalElement.find('.marker').width('100%');  // 'cause we are flipping it in style
 	    }
 
 	    // Lets us do labeling differently for first one...may want to add other classes like this one for different criteria?
@@ -494,8 +497,13 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	var datesTiled = new Array();
 
 	while (upTest() && testInc < testIncTest) {
+
+	    //alert("here is right before we tile up");
+
 	    checkStart += self.tile('up');
             datesTiled.push(topDate);
+
+	    //alert("here is right after we tile up");
 
 	    // These need to be adjusted by the last *tile* size not the sub-interval height value.
 	    if (!isManager) {
@@ -662,10 +670,11 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				var class_regex = / /g;
 
 				var tag_string = '';
+				var dirty_tag_string = '';
 				for (k = 0; k < events[i].tags.length; k++) {
 				    tag_string += ' ' + events[i].tags[k].replace(/ /g, '_').replace(/\./g, '');
+				    dirty_tag_string += ' <span class=\"tag_separator\">|</span> ' + events[i].tags[k].replace(/'/, "&#39;").replace(/"/, '&#34;');
 				}
-
 
 				if (orientation == 'vertical') {
 				    $(element).append(
@@ -679,13 +688,23 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 					    + " alt='" + $(element).attr('class') + "'/>"
 				    );
 				} else {
+				    var desc = '';
+				    if (events[i].desc != null) {
+					desc = events[i].desc.replace(/'/g, "&#39;").replace(/"/g, '&#34;').replace(/\\r/g, '');
+				    }
+
 				    $(element).append(
 					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_') + "'"
+					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_').replace(/'/g, "&#39;").replace(/"/g, '&#34;')
 					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; top:" + leftPosition + "px;"
-					    + " margin-left: -10px; left: " + topPosPercentage + "%' title='" + events[i].title + "'"
+					    + " margin-left: -10px; left: " + topPosPercentage + "%' title='"
+					// Kinda wacky, a bunch of HTML formatted *inside* the title field.  For tooltip (jQuery tools tooltip)
+					    + "<span class\=\"date_title\">" + events[i].start.toString('MM/dd/yyyy') + "</span>"
+					    + "<br />" + events[i].title.replace(/'/g, "&#39;").replace(/"/g, '&#34;')
+					    + "<br /><div class=\"desc\">" + desc + "</div>"
+					    + "<br /><div class=\"tags\">" + dirty_tag_string + "</div>'"
 					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
 					    + " alt='" + $(element).attr('class') + "'/>"
 				    );
@@ -777,6 +796,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
     self.getSize = function () {
+	//$("#dataMonitor #stpNew span.data").html(parseFloat($(widgetSelector)[volumeDimensionInvName]()));
+	$("#dataMonitor #stpNew span.data").html(widgetSelector + ' = ' + parseFloat($(widgetSelector).width()));
+
 	return parseFloat($(widgetSelector)[volumeDimensionInvName]());
     };
 
@@ -797,6 +819,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     };
 
     self.getStart = function () {
+	// $("#dataMonitor #dragtype span.data").html('$(widgetSelector).css(startEdgeName) = ' + $(widgetSelector).css(startEdgeName));
 	return parseFloat($(widgetSelector).css(startEdgeName));
     };
 
