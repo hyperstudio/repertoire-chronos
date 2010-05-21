@@ -193,6 +193,10 @@ repertoire.chronos.model = function(options) {
 	// I really hate this.  This is the part I really hate.
 	if (splitString == null) {
 	    if (gs_flag && propertyString != 'entry' && propertyString != '$t') {
+		// When did this start needing to be here?!?
+                if (typeof(deepObject) == 'object') {
+		    return deepObject;
+		}
 		var splitGSData = deepObject.split(',');
 		var splitGSDataFinal = {};
 		for (var i = 0; i < splitGSData.length; i++) {

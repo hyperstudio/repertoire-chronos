@@ -174,6 +174,11 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
 	// ...and animate the position to that event (positioned halfway down the timeline):
 	var animate_options = {};
+
+        if (eventElement.offset()[startEdgeName] == null) {
+	    alert('whatsit?' + eventElement);
+	}
+
 	animate_options[startEdgeName] = ( parseFloat($(widgetSelector + ' ul').offset()[startEdgeName]) - parseFloat(eventElement.offset()[startEdgeName]) + (timelineSize / 2) );
 	$(widgetSelector + ' ul').animate(animate_options);
     };

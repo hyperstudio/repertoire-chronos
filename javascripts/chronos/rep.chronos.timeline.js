@@ -101,7 +101,8 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 							    subIntervalName:     'month',
 							    isManager:           false,
 						            intervalsVisible:    1,
-							    eventViewType:       'icon'
+							    eventViewType:       'icon',
+							    mapTags:             options.mapTags
 							}, dataModel);
 
 /*  IN PROGRESS.
@@ -164,8 +165,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	if (defaults.orientation == 'vertical') {
 	    // Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!
-	    eventList.scrollToEvent('3932');
-	} else {
+	    if (options.startID) {
+		eventList.scrollToEvent(options.startID);
+	    }
 	}
     };
 

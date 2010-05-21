@@ -37,6 +37,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     var isManager            = options.isManager           || false;     // Determines whether this widget is the 'boss' of the other widgets in the global timeline.
     var managerStP           = 0;                                        // Set after initialization based on whether or not this is a manager.
 
+    var mapTags              = options.mapTags             || false;     // TEMPORARY: need to revisit the entire tagging system infrastructure, it's a big hack now basically.
+
     // Holds start edge positioning and tile height for monitoring and re-calculating
     // var startChange       = null;      // Must be initialized
 
@@ -640,7 +642,13 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				// var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;
 
 				// Temporarily set to map to tag count
-				var dotSize      = (Math.floor(events[i].tags.length / 2) + ((Math.floor(events[i].tags.length / 2)) % 2)) + 12;
+				var dotSize = 0;
+
+				if (mapTags) {
+				    dotSize = (Math.floor(events[i].tags.length / 2) + ((Math.floor(events[i].tags.length / 2)) % 2)) + 12;
+				} else {
+				    dotSize = 12;
+				}
 
 				var leftPosition = 20;
 				leftPosition = (wasPosCount * iconWidth) - iconWidth; // how far to indent?

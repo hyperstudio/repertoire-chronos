@@ -114,6 +114,14 @@
                          timelineOptions['tag_name'] = config.tag_name;
 		     }
 
+                     if (config.startID != null) {
+                         timelineOptions['startID'] = config.startID;
+		     }
+
+                     if (config.mapTags != null) {
+                         timelineOptions['mapTags'] = config.mapTags;
+		     }
+
 		 } else {
 		     // Shouldn't be hard-coded.  Should just throw an error if we don't have these args.
 		     modelOptions.params['url'] = "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
