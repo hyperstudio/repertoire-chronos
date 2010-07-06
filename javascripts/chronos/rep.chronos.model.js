@@ -17,15 +17,6 @@ repertoire.chronos.model = function(options) {
     options = options || {};
 
 
-    // Defaults; can be overridden to handle other JSON formats
-    options['data_start'] = options['data_start'] || 'events';
-    options['id_name']    = options['id_name']    || 'id';
-    options['title_name'] = options['title_name'] || 'title';
-    options['date_name']  = options['date_name']  || 'start';
-    options['tag_name']   = options['tag_name']   || 'tags';
-    options['desc_name']  = options['desc_name']  || 'desc';
-
-
     // PRIVATE
 
     /* 
@@ -224,44 +215,83 @@ repertoire.chronos.model = function(options) {
      * @private
      *
      */
-    var callback = function (data) {
-
-	var real_data = nextLevel(data, options.data_start);
-
-	$.each(real_data, function (i, event) {
-		   self.data.push({
-				      id:    nextLevel(event, options.id_name),
-				      title: nextLevel(event, options.title_name),
-				      start: parseMethod(nextLevel(event, options.date_name)),
-				      tags:  nextLevel(event, options.tag_name),
-				      desc:  nextLevel(event, options.desc_name)
-				  });
-	       });
+    var chronos_callback = function (data_feed, data) {
+	//alert('test!?' + data_feed.feed_name);
 
 	/*
-	 * ORDER ENTIRE SET OF ITEMS ON EACH LOAD:
-	 * 
-	 * Should this be re-factored to be more efficient?
-	 * How frequently is it going to be hit?
-	 * Is there a better way to write this, regardless of efficiency?
-	 * 
+	if (data_feed.feed_name == 'flickr_jbp_hdigital') {
+	    alert(data_feed.id_name);
+	}
+
+	if (data_feed.feed_name == 'flickr_jbp_hdigital') {
+	    alert('where are we failing?');
+	}
+	*/
+	var real_data = nextLevel(data, data_feed.data_start);
+
+	for (name in data_feed) {
+	    //alert(name + " = " + data_feed[name]);
+	}
+	var random_start = Math.floor(Math.random() * 500) + 1000;
+	var id_function = function (i, this_event) {
+	    //if (data_feed.feed_name == 'flickr_jbp_hdigital') { alert('hello!?'); }
+
+	    if (data_feed.id_name == 'calculate') {
+		//alert(i + random_start);
+		return i + random_start;
+	    } else {
+		return nextLevel(this_event, data_feed.id_name);
+	    }
+	};
+
+	$.each(real_data, function (i, event) {
+		self.data.push({
+			    id:        id_function(i, event),
+			    title:     nextLevel(event, data_feed.title_name),
+			    start:     parseMethod(nextLevel(event, data_feed.date_name)),
+			    end:       parseMethod(nextLevel(event, data_feed.end_name)),
+			    tags:      nextLevel(event, data_feed.tag_name),
+			    desc:      nextLevel(event, data_feed.desc_name),
+			    img:       nextLevel(event, data_feed.img_name),
+			    people:    nextLevel(event, data_feed.people_name),
+			    feed_name: data_feed.feed_name
+			    });
+	    });
+
+	/* This section for stripping out dupes *by ID* */
+	var dupe_catcher = {};
+	var new_data     = [];
+
+	for (var k = 0; k < self.data.length; k++) {
+	    if (isNaN(dupe_catcher[self.data[k].id])) {
+		dupe_catcher[self.data[k].id] = 1;
+		new_data.push(self.data[k]);
+	    }
+	}
+
+	// Now reset with dupes pulled out:
+	self.data = new_data;
+	/* end strip out dupes *by ID* */
+
+
+	// Make this generic!  This is just a hack 'cause twitter data seems to be on Cali time?
+	for (var k = 0; k < self.data.length; k++) {
+	    if (self.data[k].feed_name == 'twitter1') self.data[k].start.add({ hours: -2.0 });  // WHAT IS UP WITH THE TIMES HERE!?  I've had it at 1.30, then that was off...!??! 
+	}
+
+
+	/*
+	 *  Sort items by date, earliest first.
+	 *   This happens here, redundantly, rather than in initialize, as this callback seems to get called after initialization.
 	 */
 	self.data.sort(
-	    function (a, b) {
-		if (a.start.getFullYear() === b.start.getFullYear()) {
-		    if (a.start.getMonth() === b.start.getMonth()) {
-			if (a.start.getDate() === b.start.getDate()) {
-			    return a.start.getHours() > b.start.getHours();
-			} else {
-			    return a.start.getDate() > b.start.getDate();
-			}
-		    } else {
-			return a.start.getMonth() > b.start.getMonth();
-		    }
-		} else {
-		    return a.start.getFullYear() > b.start.getFullYear();
-		}
-	    }
+		       function(a, b) {
+			   if (a.start.isBefore(b.start)) {
+			       return -1;
+			   } else {
+			       return 1;
+			   }
+		       }
 	);
     };
 
@@ -278,7 +308,82 @@ repertoire.chronos.model = function(options) {
      *   Responsible for loading JSON.
      */
     self.update = function() {
-        self.fetch(options['params'], options['url'], 'json', callback, $('#debug'), false);
+	if (options.data_feeds != null) {
+
+	    var callbacks = [];
+
+	    for (var b = 0; b < options.data_feeds.length; b++) {
+
+		var data_url = '';
+
+		if (options.data_feeds[b].use_php_filter != null) {
+		    data_url = options.data_feeds[b].params.url;
+		} else {
+		    data_url = options.data_feeds[b].data_url;
+		}
+
+		if (data_url.search('^http://spreadsheets.google.com') != -1) {
+		    gs_flag = true;
+		}
+
+		//alert("b = " + b + ", " + options.data_feeds[b].feed_name);
+
+		var this_data_feed = options.data_feeds[b];
+
+		callbacks[b] = function (callback_data) {
+		    chronos_callback(this_data_feed, callback_data);
+		}
+
+		/*
+		if (options.data_feeds[b].feed_name == 'flickr_jbp_hdigital') {
+		    callbacks[b] = function (callback_data) {
+			for (var k = 0; k < callback_data.items.length; k++) {
+			    $('#json_errors').append(callback_data.items[k].date_taken + "<br />");
+			    $('#json_errors').append(callback_data.items[k].description + "<br />");
+			    //for (name in callback_data.items[k]) {
+			    //    $('#json_errors').append(name + "<br />");
+			    //}
+			    //$('#json_errors').append('<br />');
+			    
+			}
+		    }
+		}
+		*/
+
+                var async     =  false;
+		var data_type = 'json';
+
+		if (options.data_feeds[b].jsonp != null && options.data_feeds[b].jsonp != false) {
+		    // async     =  true;
+		    data_type = 'jsonp';
+		}
+
+		self.fetch(options['params'], data_url, data_type, callbacks[b], $('#json_errors'), async, options.data_feeds[b].jsonp);
+	    }
+	} else {
+	    var data_url = '';
+
+	    if (options.use_php_filter != null) {
+		data_url = options.url;
+	    } else {
+		data_url = options.params.url;
+	    }
+
+	    if (data_url.search('^http://spreadsheets.google.com') != -1) {
+		gs_flag = true;
+	    }
+	    var callback = function (data) {
+		chronos_callback(options, data);
+	    };
+
+	    var data_type = 'json';
+	    if (options.jsonp != null && options.jsonp != false) {
+		data_type = 'jsonp';
+	    }
+
+	    self.fetch(options['params'], data_url, data_type, callback, $('#debug'), false, options.jsonp);
+	}
+
     };
 
 
@@ -300,10 +405,50 @@ repertoire.chronos.model = function(options) {
 	dateTimeConstants.century     =      getSecondsInCentury;
 	dateTimeConstants.millenium   =      getSecondsInMillenium;
 
-	if (options.params.url.search('^http://spreadsheets.google.com') != -1) {
-	    gs_flag = true;
+	/* Option processing */
+
+	// Defaults; can be overridden to handle other naming schemes
+
+	var option_list = {
+	    data_start:  'events',
+	    id_name:     'id',
+	    title_name:  'title',
+	    date_name:   'start',
+	    end_name:    'end',
+	    tag_name:    'tags',
+	    desc_name:   'desc',
+	    people_name: 'people',
+	    img_name:    'img'
+	};
+
+	if (options.data_feeds != null) {
+	    // Need to validate, but this is just testing for now...
+	    for (var b = 0; b < options.data_feeds.length; b++) {
+		for (name in option_list) {
+		    if (options.data_feeds[b][name] == null) {
+			options.data_feeds[b][name] = option_list[name];
+		    }
+		}
+	    }
+	} else {
+	    for (name in option_list) {
+		if (options[name] == null) {
+		    options[name] = option_list[name];
+		}
+	    }
 	}
 
+	/* end option processing */
+
+	if (options['date_add']) {
+	    alert("options['date_add'] = " + options['date_add']);
+	}
+
+	if (!options.jsonp) {
+	    options['jsonp'] = false;
+	}
+
+	// This loads the data up.
 	self.update();
 
 	// Clean ids...sometimes have spaces?
@@ -312,6 +457,12 @@ repertoire.chronos.model = function(options) {
 		self.data[i].id = self.data[i].id.replace(/^\s*/, '');
 	    }
 	}
+
+	//setTimeout(10000);
+	//alert(self.data.length);
+	//alert(self.data.length);
+
+	//alert("If I don't have this alert, the pics don't show up.  Why?  The difference with this is it's JSONP using jsonp callback...?");
     };
 
 
@@ -622,15 +773,53 @@ repertoire.chronos.model = function(options) {
 	var add_vals = {};
 	add_vals[subIntervalName + 's'] = 0;
 	add_vals[subIntervalName + 's'] = new Number(add_vals[subIntervalName + 's'] + 1);
+
+	// And we want to subtract one of the next smaller interval to eliminate bug below...
+	// not sure about this algorithm though, seems fragile...
+	var next_smaller = {
+	    century: 'decade',
+	    decade:  'year',
+	    year:    'month',
+	    month:   'day',
+	    day:     'hour',
+	    hour:    'minute',
+	    minute:  'second',
+	    second:  'millisecond'
+	}
+
+        add_vals[next_smaller[subIntervalName] + 's'] = -1;
+
+	// The end point:
 	var plusOneDate = startDate.clone().add(add_vals);
 
 	for (var i = 0, j = self.data.length; i < j; i++) {
 
-	    // THIS IS RESULTING IN THE DATE IMMEDIATELY AFTER strippedStartDate TOO
-	    // (so, for January 1984, I get the events in Feb. 1984 if they fall on the 1st)
-	    // ...what to do?  Reduce plusOneDate by one subInterval?  Hmm.
+	    /* 
+	     * If we don't do the adjustment above ("next_smaller" subtraction from 
+	     * end point), we get a bug: for example, for January 1984, I get the 
+	     * events in Feb. 1984 if they fall on the 1st.
+	     */
+
+	    // Condition: 'start' of event is between start and end point of range:
+            // (example usage, any events which are not duration events which occur in range,
+            //  as well as duration event which start in tile)
 	    if (self.data[i].start.between(startDate, plusOneDate)) {
 		eventsSelection.push(self.data[i]);
+
+            // If we have an end point and the above test failed, we need to see if the duration
+            // fits certain criteria:
+	    } else if (self.data[i].end != undefined) {  // If not undefined or null
+
+                // Condition: 'end' of event is between start and end point of range:
+                // (example usage, duration starting outside of tile but ending in tile)
+		if (self.data[i].end.between(startDate, plusOneDate)) {
+		    eventsSelection.push(self.data[i]);
+
+                // Condition: 'start' of event is *before* range, but 'end' of event is *after* range:
+                // (example usage, duration starting outside--before--tile and ending outside--after--tile)
+		} else if (self.data[i].start.isBefore(startDate) && self.data[i].end.isAfter(plusOneDate)) {
+		    eventsSelection.push(self.data[i]);
+		}
 	    }
 	}
 

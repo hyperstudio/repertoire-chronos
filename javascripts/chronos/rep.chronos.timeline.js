@@ -27,7 +27,7 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
     var defaults = {
 	startDate:           options['startDate']   || 'Jan 01, 1984 00:00:00',
 	orientation:         options['orientation'] || 'vertical',   // What direction should this timeline be (options: vertical or horizontal):
-        volumeDimensionVal:  300,
+        volumeDimensionVal:  500,
 	timelineSize:        null,                            // -NEEDS INITIALIZATION
 	tileOffset:          -2,                              // How many tiles back do we pull? (to precache upward)
 
@@ -83,10 +83,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.decadesWidget = repertoire.chronos.widget(mainSelector, {
 							      startDate:           defaults.startDate,
-							      volumePercentage:    '15',
-							      widgetSelector:      '#timelineDecades',
-							      intervalName:        'decade',
-							      subIntervalName:     'year',
+							      volumePercentage:    '25',
+							      widgetSelector:      '#timelineDays',
+							      intervalName:        'day',
+							      subIntervalName:     'hour',
 							      isManager:           true,
 						              intervalsVisible:    .5,
 							      eventViewType:       'density'
@@ -95,10 +95,10 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 
 	widgets.yearsWidget = repertoire.chronos.widget(mainSelector, {
 							    startDate:           defaults.startDate,
-							    volumePercentage:    '85',
-							    widgetSelector:      '#timelineYears',
-							    intervalName:        'year',
-							    subIntervalName:     'month',
+							    volumePercentage:    '75',
+							    widgetSelector:      '#timelineHours',
+							    intervalName:        'hour',
+							    subIntervalName:     'minute',
 							    isManager:           false,
 						            intervalsVisible:    1,
 							    eventViewType:       'icon',
@@ -123,7 +123,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	    eventList = repertoire.chronos.eventListWidget(mainSelector, {
 							       startDate:        defaults.startDate,
 							       volumeSize:       '300',
-							       widgetSelector:   '#eventList'
+							       widgetSelector:   '#eventList',
+							       mapTags:           options.mapTags,
+							       useDesc:           options.useDesc
 							   }, dataModel);
 	}
 
@@ -161,7 +163,9 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
 	    eventList.initiateListUIEvents(event_list_callback);
 	}
 
-	self.initializeTags();
+	if (options.mapTags) {
+            self.initializeTags();
+	}
 
 	if (defaults.orientation == 'vertical') {
 	    // Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!

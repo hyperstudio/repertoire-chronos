@@ -68,31 +68,39 @@ repertoire.model = function(options) {
   //   type:     type of data returned (e.g. 'json', 'html')
   //   callback: function to call with returned data
   //
-  self.fetch = function(params, url, type, callback, $elem, async) {
+  self.fetch = function(params, url, type, callback, $elem, async, jsonp) {
     if (async == null)
       async = true;
 
     var spinnerClass = options.spinner || 'loading';
     if ($elem)
       $elem.addClass(spinnerClass);
-    $.ajax({
-      async:    async,
-      url:      url,
-      data:     self.to_query_string(params),
-      type:     'GET',
-      dataType: type,
-      // content negotiation problems may require:
-      /* beforeSend: function(xhr) { xhr.setRequestHeader("Accept", "application/json") } */
-      success:  callback,
-      error:    function(request, textStatus, errorThrown) {
-          if ($elem)
-            $elem.html(options.error || 'Could not load');
-      },
-      complete: function () {
-          if ($elem)
-            $elem.removeClass(spinnerClass);
-      }
-    });
+
+    var ajax_args = {
+	async:    async,
+	url:      url,
+	type:     'GET',
+	dataType: type,
+	// content negotiation problems may require:
+	/* beforeSend: function(xhr) { xhr.setRequestHeader("Accept", "application/json") }, */
+	success:  callback,
+	error:    function(request, textStatus, errorThrown) {
+	    if ($elem)
+		$elem.html(options.error || request + '<br />' + textStatus + '<br />' + errorThrown || 'Could not load');
+	},
+	complete: function () {
+	    if ($elem)
+		$elem.removeClass(spinnerClass);
+	}
+    };
+
+    if (params != null)
+	ajax_args['data'] = self.to_query_string(params);
+
+    if (jsonp != false && jsonp != null)
+	ajax_args['jsonpCallback'] = jsonp;
+
+    $.ajax(ajax_args);
   };
   
   //

@@ -4,7 +4,7 @@
   <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
   <!-- requirements: -->
-  <script src="javascripts/jquery-1.4.2.js"></script>
+  <script src="javascripts/jquery-1.4.2.min.js"></script>
   <script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
 
   <!-- using this for demo, just to do tooltip pop-ups a la Simile in horizontal layout. -->
@@ -15,7 +15,7 @@
 
   <!-- ...and the necessary CSS -->
   <link media="all" type="text/css" href="javascripts/chronos/timeline.css" rel="Stylesheet" charset="utf-8" />
-  <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.7.2.custom.css" rel="Stylesheet" charset="utf-8" />
+  <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.8.custom.css" rel="Stylesheet" charset="utf-8" />
 
   <style>
   body {
@@ -30,90 +30,88 @@
   $(window).load(
     function() {
       var chronos_config = {
+        url:         'http://hs-dev.mit.edu/repertoire/chronos/conference/',
+        js_path:     'javascripts/',
         orientation: 'vertical',
-        startID:     3932,
-        mapTags:     true,
-        url:         'http://slebinos.mit.edu/dev/repertoire-chronos/',
+        startID:     14376864555,
+        mapTags:     false,
+        useDesc:     true,
 
-        /* would like to get this sort of thing working at some point:
-        http://api.flickr.com/services/feeds/photos_public.gne?tags=water&lang=en-us&format=json
-        // Data vals
-        data_start:  'items',
-        data_url:    'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fapi.flickr.com%2Fservices%2Ffeeds%2Fphotos_public.gne%3Ftags%3Dwater%26lang%3Den-us%26format%3Djson',
-        date_name:   'date_taken',
-        id_name:     'link',
-        title_name:  'title',
-        */
+        startDate:   'May 20, 2010 18:00:00',
 
-        js_path:     'javascripts/'
+        data_feeds:  [
+          {
+            feed_name:   'twitter1',
+            data_url:    'http://hs-dev.mit.edu/repertoire/chronos/conference/twitter-all.json',
+            //data_url:    'http://search.twitter.com/search.json?q=hdigital&rpp=100&page=1&callback=?&since=2010-05-15',
+            data_start:  'results',
+            date_name:   'created_at',
+            id_name:     'id',
+            title_name:  'from_user',
+            desc_name:   'text',
+            // tags_name:   'from_user',
+            img_name:    'profile_image_url',
+            use_php_filter:  true
+          },
+
+          {
+            feed_name:   'conference_program',
+            data_url:    'http://hs-dev.mit.edu/repertoire/chronos/conference/conference.json',
+            data_start:  'conference',
+            desc_name:   'desc',
+            useDesc:     'false',
+            tags_name:   'type',
+            use_php_filter:  true
+          }
+/*
+          {
+            feed_name:   'flickr_jbp_hdigital',
+            data_url:    'http://api.flickr.com/services/feeds/photoset.gne?set=72157624119476364&nsid=49503077999@N01&lang=en-us&format=json',
+            data_start:  'items',
+            id_name:     'calculate',
+            date_name:   'date_taken',
+            people_name: 'author',
+            desc_name:   'description',
+            tags_name:   'tags',
+            jsonp:       'jsonFlickrFeed'
+          }
+*/
+        ]
       };
 
-      var URLString = document.location.toString(); // Have to do this so we can run .match() on it...?
-      var data_url = false;
-
-      // http://spreadsheets.google.com/feeds/list/tXTRNT-JFvyfpFoybaHhltw/1/public/basic?alt=json
-
-      // Really basic check to make sure we've got a google URL and not something else...not rigorous, but will do for demo.
-      //if (URLString.match('spreadsheets.google.com') && URLString.match('gs_url=(.*?)&')) {
-
-      if (!chronos_config.data_url) {
-
-      if (URLString.match('gs_url=(.*?)&')) {
-        var matches = URLString.match('gs_url=(.*?)&')
-        chronos_config['data_url']   = decodeURIComponent(matches[1]);
-        chronos_config['data_start'] = 'feed.entry';
-        chronos_config['date_name']  = 'content.$t.start';
-        chronos_config['id_name']    = 'content.$t.eventid';
-        chronos_config['title_name'] = 'title.$t';
-        chronos_config['startID']    = null;
-        chronos_config['mapTags']    = false;
-/*
-      } else if (URLString.match('gs_url=(.*?)&')) {
-        alert("I'm sorry, the URL must be a Google spreadsheets URL. See below for formatting instructions. (Reverting to default data-set.)");
-        chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
-        chronos_config['tag_name']   = 'tags';
-*/
-      } else {
-        chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
-        chronos_config['tag_name']   = 'tags';
-      }
-
-      }
-
-      if (URLString.match('start_date=(.*?)&')) {
-        var matches = URLString.match('start_date=(.*?)&')
-        var spaced_date = decodeURIComponent(matches[1]).replace(/\+/g, ' ');
-        if ( spaced_date.match(/[a-zA-Z]{3} [0-9]{2}, [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}/) ) {
-          chronos_config['startDate'] = spaced_date;
-        }
-      }
-
-      if (URLString.match('start_id=(.*?)&')) {
-        var matches = URLString.match('start_id=(.*?)&')
-        if ( decodeURIComponent(matches[1]).match(/[0-9]*/) ) {
-          chronos_config['startID'] = decodeURIComponent(matches[1]).match(/[0-9]*/);
-        }
-      }
-
-      $('input#horiz').click(function() {
-        chronos_config['orientation'] = 'horizontal';
-        $('#chronos').chronos(chronos_config);
-        return false;
-      });
-
-      $('input#vert').click(function() {
-        chronos_config['orientation'] = 'vertical';
-        $('#chronos').chronos(chronos_config);
-        return false;
-      });
-
       $('#chronos').chronos(chronos_config);
-
-      $("div#data_config").hide();
-      $('p#try_data').toggle(
-          function () { $("div#data_config").slideDown(); },
-          function () { $("div#data_config").slideUp(); }
+ 
+      $('li[data-feed_name=conference_program] span.desc').html(
+          function (index, text) {
+              if (text.match(/null/)) {
+                  return "(no description)";
+              } else {
+                  $(this).addClass('has_desc');
+                  $(this).attr('data-full_desc', text);
+                  return text.replace(/^(.{0,50}) .*$/, "$1...");
+              }
+          }
       );
+
+      $('li[data-feed_name=flickr_jbp_hdigital] span.desc').html(
+          function (index, text) {
+              alert('wtf.?');
+              $(this).addClass('has_desc');
+              $(this).attr('data-full_desc', text);
+              return text.replace(/<a href=.*><img.*><\/a>/, ' (Pic--click here) ');
+          }
+      );
+
+
+      $('span.has_desc').click(
+	  function() {
+	      if ($(this).attr('data-speaker')) {
+                  $('div#desc_display').html('<span class="info_title_heading">' + $(this).attr('data-title') + '</span><span class="info_speaker_heading">' + $(this).attr('data-speaker') + '</span>' + $(this).attr('data-full_desc'));
+              } else {
+                  $('div#desc_display').html('<span class="info_title_heading">' + $(this).attr('data-title') + '</span>' + $(this).attr('data-full_desc'));
+              }
+          });
+
 
       if (chronos_config.orientation == 'horizontal') {
         // Demoing tooltip (jQuery Tools)
@@ -162,6 +160,9 @@
 
   <p><a href="http://hyperstudio.mit.edu/software/repertoire/chronos/">http://hyperstudio.mit.edu/software/repertoire/chronos/</a></p>
 
+  <div id='json_errors'></div>
+
+<!--
   <p id='try_data'>To try your own data set, click here:</p>
   <div id="data_config">
 
@@ -192,15 +193,20 @@
   <p>For more details on formatting your spreadsheet and generating a URL, see here.</p>
 
   </div>
+-->
 
   <div id='chronos_tags'></div>
+
+  <div id="desc_display"></div>
+
+  <!-- div id="map_canvas" style="width:400px; height:400px"></div -->
 
 </div>
 
 
 <!--
 <div id="dataMonitor">
-
+-->
 
 <!--
   <div id="thisWidgetTopStuff"><span class='dataTitle'>Currently dragged widget top-related data: </span><span class='data'>0<span></div>
@@ -261,8 +267,8 @@
 -->
 
 <!--
-</div>
 -->
+
 
 <div class='clear'></div>
 

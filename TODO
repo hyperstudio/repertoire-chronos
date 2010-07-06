@@ -34,3 +34,9 @@ There is probably other stuff I'm forgetting too.
 -Examine color choices/highlighting/etc. with Brett for best possible look, feel and interactivity
 * -Ask Brett about de-emphasizing the 'manager' column's items that are not highlighted in scaler
 -Horizontal layout: remove scrolling event list until we have time to think of better paradigm, but keep tag cloud, and perhaps add pop-up events?
+
+
+05/25/10 -FIXES I'M REALIZING I NEED TO DO FOR OTHER TIME PERIODS TO WORK RIGHT
+----------------------------------------
+-Configurability of time format (labeling) so that it looks right in different configurations.
+-Merging multiple data streams into one?  How to do?  Would like to allow one data stream per timeline column as well as multiple data streams per timeline column...hmm...

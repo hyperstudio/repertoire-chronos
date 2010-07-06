@@ -70,67 +70,61 @@
 		 var dataStartYear = 1900;
 		 var dataEndYear   = 2000;
 
-		 var modelOptions       = {};
-		 modelOptions['params'] = {};
+		 var modelOptions       = { use_php_filter:  false };
 
 		 var timelineOptions    = {};
 
 		 if (config != null) {
-		     if (config.data_url != null) {
-			 modelOptions.params['url'] = config.data_url;
-		     }
+		     for (config_name in config) {
+			 if (config_name.match(/data_feeds|data_url|data_start|id_name|title_name|date_name|dateFormat|tag_name|desc_name|img_name/)) {
+			     if (config_name == 'data_url') {
+				 // We only want to populate params if we are using the php filter
+				 // (for now, may want to be able to use other params later...)
+                                 if (config_name.use_php_filter == true) {
+				     if (modelOptions['params'] == null) {
+					 modelOptions['params'] = {};
+				     }
+				     modelOptions['params']['url'] = config[config_name];
+				 }
+			     } else {
+				 modelOptions[config_name] = config[config_name];
+			     }
 
-		     if (config.data_start != null) {
-		       modelOptions['data_start'] = config.data_start;
-		     }
+			     if (config_name == 'data_feeds') {
+				 for (var b = 0; b < config.data_feeds.length; b++) {
+				     // We only want to populate params if we are using the php filter
+				     // (for now, may want to be able to use other params later...)
+                                     if (config.data_feeds[b].use_php_filter == true) {
+					 if (config.data_feeds[b]['params'] == null) {
+					     config.data_feeds[b]['params'] = {};
+					 }
+					 config.data_feeds[b]['url'] = config.url + 'json.php';
+					 config.data_feeds[b]['params']['url'] = config.data_feeds[b]['data_url'];
+				     }
+				 }
+			     }
+			 } else if (config_name.match(/orientation|startDate|startID|mapTags|useDesc/)) {
+			     timelineOptions[config_name] = config[config_name];
+			 }
 
-		     if (config.id_name != null) {
-		       modelOptions['id_name'] = config.id_name;
+			 // If we are using the JSON filter (php script), then we set the params so that
+			 // 'url' = <data_url>
+			 //  i.e.
+			 //  json.php?url=http://example.com/somefeed.json
+			 // This means also that the url is not the data feed, but the url for the wrapper script.
+			 // 
+			 // Whereas, if we are not using the wrapper script, we set params to be empty (for now, see above)
+			 //  and set the URL value for modelOptions to be the 'data_url' directly.  Kapeesh?  Wakatta?
+			 if (modelOptions.data_feeds != null && modelOptions.use_php_filter == true) {
+			     modelOptions['url'] = config.url + 'json.php';
+			 } else {
+			     modelOptions['url'] = config.data_url;
+			 }
 		     }
-
-		     if (config.title_name != null) {
-		       modelOptions['title_name'] = config.title_name;
-		     }
-
-		     if (config.date_name != null) {
-		       modelOptions['date_name'] = config.date_name;
-		     }
-
-		     if (config.dateFormat != null) {
-			 modelOptions['dateFormat'] = config.dateFormat;
-		     } else {
-			 // modelOptions['dateFormat'] = dateFormat: 'yyyy-MM-ddTHH:mm:ss-04:00', // can't figure out format specifier for '-04:00' ?
-		     }
-
-                     if (config.orientation != null) {
-                         timelineOptions['orientation'] = config.orientation;
-		     }
-
-                     if (config.startDate != null) {
-                         timelineOptions['startDate'] = config.startDate;
-		     }
-
-                     if (config.tag_name != null) {
-                         timelineOptions['tag_name'] = config.tag_name;
-		     }
-
-                     if (config.startID != null) {
-                         timelineOptions['startID'] = config.startID;
-		     }
-
-                     if (config.mapTags != null) {
-                         timelineOptions['mapTags'] = config.mapTags;
-		     }
-
 		 } else {
-		     // Shouldn't be hard-coded.  Should just throw an error if we don't have these args.
-		     modelOptions.params['url'] = "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
+		     alert('Need at least a data URL to build the timeline!');
+		     return false;
 		 }
-
-		 // Brief explanation: the 'url' param to modelOptions is more or less the 'URL prefix' to the
-		 // params['url'] param to modelOptions.  This is not a mistake, although it is confusing.
-		 modelOptions['url'] = config.url + 'json.php';
-
 
 		 // BUILD DATA MODEL:
 		 var thisModel = repertoire.chronos.model(modelOptions);

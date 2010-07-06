@@ -21,6 +21,8 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
     // PRIVATE
     var startDate            = dataModel.getDateObject(options.startDate) || null;      // Must be set
+    var mapTags              = false || options.mapTags;
+    var useDesc              = false || options.useDesc;
 
     var volumeSize           = options.volumeSize          || null;      // Must be set
     var widgetSelector       = options.widgetSelector      || null;      // Must be set
@@ -91,11 +93,16 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
 
 	    var thisLI = $('<li></li>').appendTo($(widgetSelector + ' ul.eventList'));
 	    thisLI.attr('id', dataModel.data[i].id);
+	    thisLI.attr('data-feed_name', dataModel.data[i].feed_name);
+	    thisLI.addClass(dataModel.data[i].feed_name);
 
 	    var tag_string = '';
-	    for (k = 0; k < dataModel.data[i].tags.length; k++) {
-		thisLI.addClass(dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, ''));
-		tag_string = tag_string + ' | <a class="eventList tag ' + dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, '') + '" href="#">' + dataModel.data[i].tags[k] + '</a>';
+
+            if (mapTags) {
+                for (k = 0; k < dataModel.data[i].tags.length; k++) {
+		    thisLI.addClass(dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, ''));
+		    tag_string = tag_string + ' | <a class="eventList tag ' + dataModel.data[i].tags[k].replace(/ /g, '_').replace(/\./g, '') + '" href="#">' + dataModel.data[i].tags[k] + '</a>';
+		}
 	    }
 
             var title = '';
@@ -108,7 +115,38 @@ repertoire.chronos.eventListWidget = function (selector, options, dataModel) {
                 title = dataModel.data[i].title;
 	    }
 
-	    thisLI.append("<span id='" + dataModel.data[i].id  + "' class='event_select'><span class='event_start'>" + dataModel.data[i].start.toString('MM/dd/yyyy') + ':</span><br /><span class="event_title">' + title + '</span></span><br /><span class="tags">' + tag_string + '</span>');
+	    var desc = '';
+
+	    if (useDesc) {
+		var got_speaker = false;
+		if (dataModel.data[i].people) {
+		    for (var b = 0; b < dataModel.data[i].people.length; b++) {
+			for (name in dataModel.data[i].people[b]) {
+			    if (name == 'speaker') {
+				desc = "<span data-title='" + dataModel.data[i].title + "' data-speaker='" + dataModel.data[i].people[b].speaker + "' class='desc'>" + dataModel.data[i].desc + "</span><span class='speaker_span'>" + dataModel.data[i].people[b].speaker + "<br />";
+				got_speaker = true;
+			    }
+			}
+		    }
+
+		    if (got_speaker == false) {
+			desc = "<span data-title='" + dataModel.data[i].title + "' class='desc'>" + dataModel.data[i].desc + "</span><br />";
+		    }
+		} else {
+		    desc = "<span data-title='" + dataModel.data[i].title + "' class='desc'>" + dataModel.data[i].desc + "</span><br />";
+		}
+	    }
+
+	    var img = '';
+
+	    if (dataModel.data[i].img) {
+		img = "<span class='img'><img width='48' height='48' src='" + dataModel.data[i].img + "' /></span><br />";
+	    }
+
+
+	    // MAKE DATE FORMAT CONFIGURABLE
+
+	    thisLI.append("<span id='" + dataModel.data[i].id  + "' class='event_select'><span class='event_start'>" + dataModel.data[i].start.toString('MM/dd/yyyy HH:mm:ss') + ':</span><br /><span class="event_title">' + title + '</span></span><br />' + img + desc + '<span class="tags">' + tag_string + '</span>');
 	    thisLI.addClass('eventListEvent');
 
 	    lastYear = dataModel.data[i].start.getFullYear();

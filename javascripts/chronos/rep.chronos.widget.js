@@ -78,6 +78,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	return intervalName + '_' + date.toString('yyyy_MM_dd-HH_mm_ss');
     };
 
+    // Records IDs for (duration) events which have already been drawn so we don't re-draw them in another tile!
+    var alreadyDrawn = [];
+
 
     // PUBLIC
 
@@ -545,7 +548,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
      *  Paints events to tiles.  Expect an argument of a specific date to paint.
      */
     self.drawEvents = function (dateFilter) {
-	
+
 	/*
 	 * Iterate through events.
 	 * 
@@ -621,11 +624,34 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 			//$("#dataMonitor #dates span.data").append("<ul>");
 
-			for (var i = 0, j = events.length; i < j; i++) {
+			eachEvent:for (var i = 0, j = events.length; i < j; i++) {
 
-			    var startPosition = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
+			    if (events[i].end != undefined) {                         // if not undefined or null
+				if ($.inArray(events[i].id, alreadyDrawn) === -1) {   // Using jQuery's inArray() 'cause IE (6/7?) doesn't implement indexOf().
+				    alreadyDrawn.push(events[i].id);
+				} else {
+				    continue eachEvent;
+				}
+			    }
 
+			    var startPosition    = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
 			    var topPosPercentage = (startPosition / parentHeight) * 100;
+
+			    var eventLength = -1;
+			    var eventLengthString = '';
+
+			    if (events[i].end != undefined) {
+				eventLength = Math.abs(dataModel.getIntervalInSeconds(events[i].start, events[i].end) / secondsToPixels);
+			    }
+
+			    if (eventLength !== -1) {
+				if (orientation == 'vertical') {
+				    eventLengthString = "; height:" + eventLength + "px ";
+				} else {
+				    eventLengthString = "; width:" + eventLength + "px ";
+				}
+			    }
+
 
 			    // Debugging
 /*
@@ -679,21 +705,27 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 				var tag_string = '';
 				var dirty_tag_string = '';
-				for (k = 0; k < events[i].tags.length; k++) {
-				    tag_string += ' ' + events[i].tags[k].replace(/ /g, '_').replace(/\./g, '');
-				    dirty_tag_string += ' <span class=\"tag_separator\">|</span> ' + events[i].tags[k].replace(/'/, "&#39;").replace(/"/, '&#34;');
+
+
+				if (mapTags) {
+				    for (k = 0; k < events[i].tags.length; k++) {
+				        tag_string += ' ' + events[i].tags[k].replace(/ /g, '_').replace(/\./g, '');
+				        dirty_tag_string += ' <span class=\"tag_separator\">|</span> ' + events[i].tags[k].replace(/'/, "&#39;").replace(/"/, '&#34;');
+                                    }
 				}
 
+
 				if (orientation == 'vertical') {
+
 				    $(element).append(
-					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_')
+					"<div"
+					    + " class='eDot r" + dotSize + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_')
 					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
-					    + " margin-top: -10px; top: " + topPosPercentage + "%' title='" + events[i].title + "'"
+					    + " margin-top:-" + dotSize/2 + "px; top: " + topPosPercentage + "%" + eventLengthString + "' title='" + events[i].title + "'"
 					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
-					    + " alt='" + $(element).attr('class') + "'/>"
+					    + " alt='" + $(element).attr('class') + "'></div>"
 				    );
 				} else {
 				    var desc = '';
@@ -702,19 +734,19 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    }
 
 				    $(element).append(
-					"<img src='javascripts/chronos/img/t-50-s-" + dotSize + ".png'"
-					    + " class='eDot " + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_').replace(/'/g, "&#39;").replace(/"/g, '&#34;')
+					"<div"
+					    + " class='eDot r" + dotSize + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_').replace(/'/g, "&#39;").replace(/"/g, '&#34;')
 					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; top:" + leftPosition + "px;"
-					    + " margin-left: -10px; left: " + topPosPercentage + "%' title='"
+					    + " margin-left:-" + dotSize/2 + "px; left: " + topPosPercentage + "%" + eventLengthString + "' title='"
 					// Kinda wacky, a bunch of HTML formatted *inside* the title field.  For tooltip (jQuery tools tooltip)
 					    + "<span class\=\"date_title\">" + events[i].start.toString('MM/dd/yyyy') + "</span>"
 					    + "<br />" + events[i].title.replace(/'/g, "&#39;").replace(/"/g, '&#34;')
 					    + "<br /><div class=\"desc\">" + desc + "</div>"
 					    + "<br /><div class=\"tags\">" + dirty_tag_string + "</div>'"
 					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
-					    + " alt='" + $(element).attr('class') + "'/>"
+					    + " alt='" + $(element).attr('class') + "'" + eventLengthString + "></div>"
 				    );
 				}
 			    } else if (eventViewType == 'density') {

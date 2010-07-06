@@ -54,9 +54,19 @@ filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
 /* Markers indicate placement on timeline */
 /* .chronos_horizontal .manager li .marker { background-color: rgba(0,0,0,0.5); -moz-border-radius: 5px; -webkit-border-radius: 5px; opacity:0.7;filter:alpha(opacity=70); color:#fff; position:absolute; top:-.5em; right:0; padding:0; text-align:center; z-index:9;} /* Markers indicate placement on timeline */
 
+.eDot {border:1px solid #6FAFE3; background:#9DC8EC;}
+/* .eDot:hover { background:#900;} -- javascript adds a hover class which firefox listens to, but chrome listens to this*/
+/* .eDot:hover { -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid #000; }  /* Conference data, does this override anything else? */
 
-img.eDot:hover { -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid #000; }
+.r10, .r12, .r14, .r16, .r18, .r20 {border:1px solid #579ACC;}
+.r10 { -moz-border-radius: 5px; -webkit-border-radius: 5px; height:10px; width:10px;}
+.r12 { -moz-border-radius: 6px; -webkit-border-radius: 6px; height:12px; width:12px;}
+.r14 { -moz-border-radius: 7px; -webkit-border-radius: 7px; height:14px; width:14px;}
+.r16 { -moz-border-radius: 8px; -webkit-border-radius: 8px; height:16px; width:16px;}
+.r18 { -moz-border-radius: 9px; -webkit-border-radius: 9px; height:18px; width:18px;}
+.r20 { -moz-border-radius: 10px; -webkit-border-radius: 10px; height:20px; width:20px;}
 
+.eventListEvent {overflow:auto;}
 
 .eDensity {position:absolute; z-index:3;x top:0; left:0;}
 .chronos_vertical .eDensity {background-image:url(img/event-density.png); background-repeat:repeat-x; width:100%; height:20px;}
@@ -130,7 +140,7 @@ div#eventListing span.data span.title, div#eventListing span.data span.id, div#e
 
 div#eventList { display:block; float:left; border-right:1px solid black; border-left:1px solid black; position:relative; cursor:pointer; cursor:hand; overflow:hidden;}
 
-div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 75px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
+div#eventList ul li { list-style: default; border-bottom:1px solid black; border-right:1px solid black; height: 120px; padding-top: 5px; padding-left: 3px; padding-right: 5px; font-size: 12px; }
 div#eventList ul.eventList { background-color: #FDF5E6; }
 div#eventList li.date_heading { height: 20px; font-size: 16px; font-weight: bold; background-color: #CDAA7D; }
 
@@ -150,6 +160,8 @@ li.eventListEvent span.event_date { font-size: 14px; font-weight: bold; }
 li.eventListEvent span.event_title { font-size: 12px; font-weight: bold; }
 li.eventListEvent span.tags { font-size: 10px; color: brown;}
 
+li.eventListEvent span.desc { font-size: 12px; color: #8B2252; font-weight: bold;}
+li.eventListEvent span.img { display: block; float: left; position: relative; margin: 2px; }
 
 /* tooltips (jQuery tools) for horizontal view */
 .tooltip { font-size: 12px; }
@@ -177,3 +189,19 @@ li.eventListEvent span.tags { font-size: 10px; color: brown;}
 p#try_data { background-color: #FDF5E6; cursor:pointer; cursor:hand; }
 p#try_data:hover { background-color: #FFE4C4; }
 div#data_config { border-top: 1px solid black; border-bottom: 1px solid black; }
+
+
+/* Just for conference styles: */
+
+li.conference_program { background-color: #E6E6FA }
+/* img.conference_program { background-color: #E6E6FA; border: 1px solid #E6E6FA; } */
+img.conference_program { border: 2px solid #f00; }
+div#desc_display { border: 1px solid blue; padding: 20px; margin: 20px; background-color: #E6E6FA; overflow: auto; height: 400px;}
+div#desc_display span.info_title_heading { color: #3D59AB; font-weight: bold; display: block; }
+div#desc_display span.info_speaker_heading { color: #6495ED; font-weight: bold; display: block; }
+span.speaker_span { display: block; margin-top: 5px }
+
+/* still want this? .eventListEvent {overflow:auto;} */
+/* img.conference_program { background-color: #E6E6FA; -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid #ff8000; } */
+div.conference_program { -moz-border-radius: 10px; -webkit-border-radius: 10px; border: 1px solid #000; background-color: #ff8000; }
+li.flickr_jbp_hdigital { background-color: #F4A460 }
