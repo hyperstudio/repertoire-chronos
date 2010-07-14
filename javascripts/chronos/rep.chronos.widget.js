@@ -81,6 +81,15 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
     // Records IDs for (duration) events which have already been drawn so we don't re-draw them in another tile!
     var alreadyDrawn = [];
 
+    // Values for determining placement of icons within drawEvents()...iconWidth should be configurable:
+    var iconWidth   = 20;
+    var widgetWidth = 0;   // initialized later
+
+    // Multidimensional array which records durations that are "blocking" the "lanes" so that we don't paint events over events.
+    //  See drawEvents() for more implementation details.
+    var lanes = [];
+    var laneTestCount = 0;  // lets us get out of recursive laneTest() function in case of problem...
+
 
     // PUBLIC
 
@@ -182,6 +191,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 	// Needed for scaling:
 	startPositionRatio  = self.getStart() / self.getSize();
 	endPositionRatio    = (self.getStart() + timelineSize) / self.getSize();
+
+	widgetWidth = $(widgetSelector)[volumeDimensionName]();
 
 	//alert("here we've set the position but haven't called checktiles yet");
 
@@ -372,6 +383,8 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
      */
     self.resize = function () {
 
+	// THIS FUNCTION IS KINDA SLOW.
+
 	// We have to regenerate all the heights properly using same remainder mechanism as before:
 	// (can we make this into a function which we use in both places?)
 
@@ -401,6 +414,13 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			// NOW, we can set the height of sub-interval element:
 
                         $(this).css(volumeDimensionInvName, (thisSubIntervalHeight + 'px'));
+
+			// Within this li, we have to find all the duration events and resize:
+			$(this).find('div.eDot.duration').each(
+					      function () {
+						  $(this).css(volumeDimensionInvName, (parseInt($(this).attr('data-seconds')) / secondsToPixels + 'px'));
+					      }
+					      );
 		    }
 		);
 
@@ -565,13 +585,18 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 	// Iterate through each rendered tile and generate events
 
-	// Where does this belong?  This should be part of the "visual event" 
-	// (that is, view class that corresponds to individual datetime event model) class, and also be configurable.
-	var iconWidth   = 20;
 	var switchDir   = false;
-
-	var widgetWidth = $(widgetSelector)[volumeDimensionName]();
 	var wasPosCount = 0;  // controls 'sine wave meandering' pattern
+
+	if (lanes.length == 0 && eventViewType == 'icon') {
+	    for (var l = 0, m = (widgetWidth / iconWidth); l < m; l++) {
+		lanes[l] =
+		    {
+			start: false,
+			end:   false
+		    };
+	    }
+	}
 
 	// This regexp is used to match on the class we generate from the date to place in tiles.
 	var dateClassRegExp = new RegExp(intervalName + "_(\\d{4})_(\\d{2})_(\\d{2})-(\\d{2})_(\\d{2})_(\\d{2})_inc(\\d{1,2})");
@@ -637,21 +662,6 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    var startPosition    = (dataModel.getIntervalInSeconds(tileStartDate, events[i].start) / secondsToPixels);
 			    var topPosPercentage = (startPosition / parentHeight) * 100;
 
-			    var eventLength = -1;
-			    var eventLengthString = '';
-
-			    if (events[i].end != undefined) {
-				eventLength = Math.abs(dataModel.getIntervalInSeconds(events[i].start, events[i].end) / secondsToPixels);
-			    }
-
-			    if (eventLength !== -1) {
-				if (orientation == 'vertical') {
-				    eventLengthString = "; height:" + eventLength + "px ";
-				} else {
-				    eventLengthString = "; width:" + eventLength + "px ";
-				}
-			    }
-
 
 			    // Debugging
 /*
@@ -663,6 +673,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 */
 
 			    if (eventViewType == 'icon') {
+
 				// TEMPORARY DOT SIZE RANDOMIZATION - THIS SHOULD BE BASED ON METRICS
 				// var dotSize      = (Math.floor(Math.random() * 5) * 2) + 10;
 				// var dotSize      = (Math.floor(Math.random() * 2) * 2) + 10;
@@ -676,6 +687,50 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    dotSize = 12;
 				}
 
+				/*
+
+				  let's think about this.
+
+				  first we need to test to see if the lane has a conflict.
+				  if it does, then we go to the next one.
+				  if the next one has no conflict, then we break and use that lane.
+
+				  (what do we do in the rare case where all the lanes conflict?  this could cause an endless loop...)
+
+				  after we've established that the lane we've found is not conflicting, we have to fill it with this event, IF it is a duration event (no? In all cases?).
+
+
+				  what are the conditions for a conflict?
+
+				  - we have a duration event and there are 'instantaneous' events which have start dates within the datetime bounds of duration event
+				      instEvent.start isAfter durationEvent.start && instEvent.start isBefore durationEvent.end
+				  - we have an instantaneous event and there is a duration event which ends after and starts before that instantaneous event
+				      instEvent.start isAfter durationEvent.start && instEvent.start isBefore durationEvent.end
+
+				      question: does it matter if we only have start and end points for each lane?
+				      if an instantaneous event starts between the start and endpoint stored for that lane, then we move to the next.
+				      if a duration event starts or ends between the start and endpoint stored for that lane, then we move to the next.
+				      if a duration event starts *after* the start point for that lane, but there is no endpoint (i.e. only instantaneous event stored), then we don't have to move.
+				      if a duration event ends *before* the start point for that lane, and there is no endpoint (i.e. only instantaneous event stored), then we don't have to move.
+
+				      HOWEVER, there is one situation where we are "wasting" space--if we have stored the *endpoint* for a duration event, then updated the start point based on
+				      an instantaneous event, we may have a big chunk of space in there that we could actually fit an event in.  In this case we may lose a lot of space...but I suspect not.
+
+				  that's it.
+
+				*/
+
+				if (wasPosCount == undefined) {
+				    alert('title: ' + events[i].title + ", id:  " + events[i].id);
+				}
+
+				var position = laneTest({'wasPosCount': wasPosCount, 'switchDir': switchDir}, events[i]);
+				switchDir    = position.switchDir;
+				wasPosCount  = position.wasPosCount;
+
+				// Reset lane test for next time around:
+				laneTestCount = 0;
+
 				var leftPosition = 20;
 				leftPosition = (wasPosCount * iconWidth) - iconWidth; // how far to indent?
 
@@ -684,22 +739,30 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 				    leftPosition = 0;
                                 }
 
-				// If we're stacking to right
-				if (switchDir == false){
-				    wasPosCount += 1; // Continue stacking
+				// For "duration events:"
+				var eventLength = -1;
+				var eventLengthString = '';
 
-				    // But check the next stack
-				    if ((wasPosCount + 1) * iconWidth >= widgetWidth) {
-					switchDir = true; // And switch dirs if it overflows
-				    }
-				} else if (switchDir == true) {   // If we're stacking to the left
-				    wasPosCount -= 1; // Continue stacking
+				var eventTypeClass = 'instant';
+				var data_seconds = 0;
 
-				    // But check the next stack
-				    if ( ((wasPosCount) * iconWidth) - iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
-					switchDir = false; // And switch dirs if it overflows
+				// IF WE HAVE A "DURATION EVENT," i.e. if we have an event with an endpoint
+				if (events[i].end != undefined) {
+				    data_seconds   = dataModel.getIntervalInSeconds(events[i].start, events[i].end);
+				    eventLength    = Math.abs(data_seconds / secondsToPixels);
+				    eventTypeClass = 'duration';
+				}
+
+				//$("#dataMonitor #dates span.data").append('id #' + (wasPosCount) + ', ' + events[i].start + " - " + events[i].end + "<br />");
+
+				if (eventLength !== -1) {
+				    if (orientation == 'vertical') {
+					eventLengthString = "; height:" + eventLength + "px ";
+				    } else {
+					eventLengthString = "; width:" + eventLength + "px ";
 				    }
 				}
+
 
 				var class_regex = / /g;
 
@@ -714,17 +777,18 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
                                     }
 				}
 
-
 				if (orientation == 'vertical') {
 
 				    $(element).append(
 					"<div"
-					    + " class='eDot r" + dotSize + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_')
+					    + " class='eDot r" + dotSize + " " + eventTypeClass + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_')
 					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; left:" + leftPosition + "px;"
 					    + " margin-top:-" + dotSize/2 + "px; top: " + topPosPercentage + "%" + eventLengthString + "' title='" + events[i].title + "'"
-					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
+					    + " data-date='" + events[i].start.toString() + " '"
+					    + " data-lane='" + wasPosCount + "'"
+					    + " data-seconds='" + data_seconds + "'"
 					    + " alt='" + $(element).attr('class') + "'></div>"
 				    );
 				} else {
@@ -735,7 +799,7 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 
 				    $(element).append(
 					"<div"
-					    + " class='eDot r" + dotSize + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_').replace(/'/g, "&#39;").replace(/"/g, '&#34;')
+					    + " class='eDot r" + dotSize + " " + eventTypeClass + " " + events[i].feed_name + ' ' + dotSize + " " + events[i].start.toString().replace(class_regex, '_') + ' ' + events[i].title.replace(class_regex, '_').replace(/'/g, "&#39;").replace(/"/g, '&#34;')
 					    + " " + tag_string + "'"
 					    + " id='event-" + events[i].id + "'"
 					    + " style='position:absolute; z-index:3; top:" + leftPosition + "px;"
@@ -745,7 +809,9 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 					    + "<br />" + events[i].title.replace(/'/g, "&#39;").replace(/"/g, '&#34;')
 					    + "<br /><div class=\"desc\">" + desc + "</div>"
 					    + "<br /><div class=\"tags\">" + dirty_tag_string + "</div>'"
-					    + " date='" + events[i].start.toString() + " '"   // TOTALLY NON-STANDARD ATTRIBUTE JUST FOR TESTING
+					    + " data-date='" + events[i].start.toString() + " '"
+					    + " data-lane='" + wasPosCount + "'"
+					    + " data-seconds='" + data_seconds + "'"
 					    + " alt='" + $(element).attr('class') + "'" + eventLengthString + "></div>"
 				    );
 				}
@@ -938,6 +1004,104 @@ repertoire.chronos.widget = function (selector, options, dataModel) {
 			    $(this).removeClass('highlight_event_over');
 			    $('#' + $(this).attr('id').replace(/^event-/, '')).removeClass('highlight_event_li_over');
 			});
+    };
+
+
+
+    /**
+     *	Here we test to see if we have a conflict with what is recorded in the "blocking lanes" array.
+     */
+    var laneTest = function (position, thisEvent) {
+
+	// "Emergency measure" to handle the case where a base case is never met...
+	// will find a better way around later:
+	if (laneTestCount > lanes.length) {
+	    return false;
+	} else {
+	    laneTestCount++;
+	}
+
+	position = eventLaneIncrementor(position);
+
+	// What's going on here?
+	if (lanes[position.wasPosCount] == undefined) {
+	    for (var blah in position) {
+		alert(blah + " = " + position[blah]);
+	    }
+	    return false;
+	}
+
+	// First, we have not set either start or end values for this lane.
+	if (lanes[position.wasPosCount].start === false) {
+
+	    // -increment and set lane values
+	    setLaneVals(position, thisEvent);
+
+	} else {
+
+	    if (thisEvent.start.isAfter(lanes[position.wasPosCount].end) || thisEvent.start.isBefore(lanes[position.wasPosCount].start)) {
+
+		// set lane values
+		setLaneVals(position, thisEvent);
+
+	    } else {
+		// What do we do if we have multiple events with the exact same time, such that they fill up all the lanes (and then some)?
+		// If that happens we need to break out of this recursive function somehow so we don't keep going endlessly.
+
+		//alert("overlapping... thisEvent.id = " + thisEvent.id + ", thisEvent.start = " + thisEvent.start + ", thisEvent.end = " + thisEvent.end + " position.wasPosCount (lane) = " + position.wasPosCount + ", this lane's start: " + lanes[position.wasPosCount].start + ", this lane's end: " + lanes[position.wasPosCount].end );
+
+		// test again (move to next lane)
+		return laneTest(position, thisEvent);
+	    }
+	}
+
+	return position;
+    };
+
+
+    /**
+     *
+     */
+    var eventLaneIncrementor = function (position) {
+	if (position.switchDir == false) {
+	    position.wasPosCount += 1;
+
+	    // But check the next stack
+	    if ((position.wasPosCount + 1) * iconWidth >= widgetWidth) {
+		position.switchDir = true; // And switch dirs if it overflows
+	    }
+	} else if (position.switchDir == true) {   // If we're stacking to the left
+	    position.wasPosCount -= 1; // Continue stacking
+
+	    // But check the next stack
+	    if ( ((position.wasPosCount) * iconWidth) - iconWidth <= 0) {  // (Order of Operations here??)  GLOBAL
+		position.switchDir = false; // And switch dirs if it overflows
+	    }
+	}
+
+	return position;
+    };
+
+
+    /**
+     *
+     */
+    var setLaneVals = function (position, thisEvent) {
+	lanes[position.wasPosCount].start = thisEvent.start.clone();
+
+	if (thisEvent.end != undefined) {
+	    lanes[position.wasPosCount].end = thisEvent.end.clone();
+
+	// If we are working with an instantaneous event, then we still have to set the end
+	// if the end point is not later than the event's start date,
+	// so that we don't have duration events painted later than instantaneous events
+	// overlapping.
+
+	} else {
+	    lanes[position.wasPosCount].end = thisEvent.start.clone();
+	}
+
+	return;
     };
 
 

@@ -167,12 +167,14 @@ repertoire.chronos.timeline = function(mainSelector, options, dataModel) {
             self.initializeTags();
 	}
 
+	/*
 	if (defaults.orientation == 'vertical') {
 	    // Li'l easy hack to get it to load at a roughly sychronous position, to start at least...this is insanely not portable...FOR DEMO ONLY!
 	    if (options.startID) {
 		eventList.scrollToEvent(options.startID);
 	    }
 	}
+	*/
     };
 
 
