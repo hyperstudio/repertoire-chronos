@@ -4,18 +4,17 @@
   <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
   <!-- requirements: -->
-  <script src="javascripts/jquery-1.4.2.js"></script>
-  <script src="javascripts/jquery-ui-1.8.custom.min.js"></script>
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
   <!-- using this for demo, just to do tooltip pop-ups a la Simile in horizontal layout. -->
-  <script src="javascripts/jquery.tools.min.js"></script>
+  <!-- <script src="http://cdn.jquerytools.org/1.2.6/full/jquery.tools.min.js"></script> -->
 
   <!-- now load Chronos: -->
   <script src="javascripts/chronos/jquery.chronos.js"></script>
 
   <!-- ...and the necessary CSS -->
   <link media="all" type="text/css" href="javascripts/chronos/timeline.css" rel="Stylesheet" charset="utf-8" />
-  <link media="all" type="text/css" href="javascripts/ui-lightness/jquery-ui-1.7.2.custom.css" rel="Stylesheet" charset="utf-8" />
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/ui-lightness/jquery-ui.css">
 
   <style>
   body {
@@ -33,7 +32,7 @@
         orientation: 'vertical',
         startID:     3932,
         mapTags:     true,
-        url:         'http://slebinos.mit.edu/dev/repertoire-chronos/',
+        url:         '',
 
         /* would like to get this sort of thing working at some point:
         http://api.flickr.com/services/feeds/photos_public.gne?tags=water&lang=en-us&format=json
@@ -74,7 +73,7 @@
         chronos_config['tag_name']   = 'tags';
 */
       } else {
-        chronos_config['data_url']   = 'http://slebinos.mit.edu/dev/repertoire-chronos/json.php?url=http%3A%2F%2Fslebinos.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
+        chronos_config['data_url']   = 'json.php?url=http%3A%2F%2Fhs-dev.mit.edu%2Fus-iran%2Fevents.js%3Fs%3D1910-01-01%26e%3D2000-12-31';
         chronos_config['tag_name']   = 'tags';
       }
 

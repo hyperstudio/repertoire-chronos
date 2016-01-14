@@ -12,7 +12,7 @@
 
          // What's the "right way to fail here?"  Probably should not set it to our URL, not that it's that bad...
 	 if (config.url == null)
-	     config.url = "http://slebinos.mit.edu/dev/repertoire-chronos/";  // NEVER SET BY SCALER (JUST NEED GETTER)
+	     config.url = "";  // NEVER SET BY SCALER (JUST NEED GETTER)
 
 	 if (config.image_url == null)
 	     config.img_url = config.url + "javascripts/chronos/";            // NEVER SET BY SCALER (JUST NEED GETTER)
@@ -124,7 +124,7 @@
 
 		 } else {
 		     // Shouldn't be hard-coded.  Should just throw an error if we don't have these args.
-		     modelOptions.params['url'] = "http://slebinos.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
+		     modelOptions.params['url'] = "http://hs-dev.mit.edu/us-iran/events.js?s=" + dataStartYear + "-01-01&e=" + dataEndYear + '-12-31';
 		 }
 
 		 // Brief explanation: the 'url' param to modelOptions is more or less the 'URL prefix' to the
