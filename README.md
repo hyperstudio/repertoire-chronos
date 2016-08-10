@@ -1,6 +1,8 @@
 # Repertoire Chronos: d3-based timeline widget for [Repertoire Faceting](https://github.com/hyperstudio/repertoire-faceting)
 
-This branch of Repertoire Chronos is an in-progress re-implementation of the original concept and design. Chronos allows developers using the Repertoire faceted browser to include a timeline element displaying temporal data from multiple facets. These data are
+This branch of Repertoire Chronos is an in-progress re-implementation of the original concept and design. Chronos allows developers using the Repertoire faceted browser to include a timeline element displaying temporal data from multiple facets. These data, like other facet items, act as clickable filters for the overall faceting context.
+
+![Chronos example screenshot](screenshot.png)
 
 ### Requirements
 Chronos depends on [jQuery](http://jquery.com), [d3.js](https://d3js.org) version 4.x, [d3-scale-chromatic](https://github.com/d3/d3-scale-chromatic), [d3-tip](https://github.com/VACLab/d3-tip) and [moment.js](http://momentjs.com), as well as on [Repertoire Faceting](https://github.com/hyperstudio/repertoire-faceting).
